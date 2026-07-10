@@ -52,7 +52,7 @@ A Prezzer deck is real software. It lives in its own repository, renders with re
 
 - 🎬 **Beat-driven slides** — every slide is a little state machine; each press of space reveals the next beat of the story
 - ⚡ **Bun-native end to end** — one runtime for the dev server, Tailwind, TypeScript, tests, and the build
-- 📦 **One-file offline artifact** — `prezzer build` bakes markup, styles, scripts, images, and fonts into a single HTML file
+- 📦 **One-file offline artifact** — `prezzer build` bakes markup, styles, scripts, images, and self-hosted fonts into a single HTML file
 - 🎭 **Presenter chrome built in** — speaker notes, grid overview, act-aware progress rail, and honest rollout badges
 - 💫 **Eight slide transitions** — `portal`, `glitch`, `zoom`, `rise`, `spiral`, `morph`, `split`, and `slide`, chosen per slide
 - 🔗 **Hash deep links** — `#4.2` reopens the deck at slide four, beat two; refresh resumes exactly where you were
@@ -116,18 +116,22 @@ export function Talk() {
   <img src="docs/images/hello-beats.png" alt="A beats slide with three revealed lines, act header, creed chip, and stat rail" width="85%">
 </p>
 
-## 🎛️ Present Like You Mean It
+## 🎪 Present Like You Mean It
 
-| Key             | Action                           |
-| --------------- | -------------------------------- |
-| `space`, `→`    | next beat, widget, or slide      |
-| `←`             | previous beat or slide           |
-| `shift` + arrow | skip a whole slide               |
-| `1`–`9`         | jump straight to a slide         |
-| `g`             | grid overview                    |
-| `n`             | speaker notes                    |
-| `f`             | fullscreen                       |
-| `d`             | deny mode for failure-path demos |
+| Key                  | Action                              |
+| -------------------- | ----------------------------------- |
+| `space`, `→`, `pgdn` | next beat, widget, or slide         |
+| `←`, `pgup`          | previous beat or slide              |
+| `shift` + arrow      | skip a whole slide                  |
+| `1`–`9`              | jump straight to a slide            |
+| `home`, `end`        | first or last slide                 |
+| `g`                  | grid overview                       |
+| `n`                  | speaker notes                       |
+| `f`                  | fullscreen                          |
+| `d`                  | deny mode for failure-path demos    |
+| `a`                  | fire the autoplay signal to widgets |
+
+Page up and page down mean presenter clickers work out of the box.
 
 Touch works everywhere the keyboard does: swipe to navigate, tap the edges to step, tap the center to advance. Imperative widgets register with the deck and claim the next advance before the slide moves on — live demos run on your cue, not on a timer.
 
@@ -143,10 +147,10 @@ prezzer build
 
 ```
 prezzer baking index.html
-✓ dist/index.html · 361.0 KB · 235ms · one file, fully offline
+✓ dist/index.html · 361.0 KB · 235ms · one file, works offline
 ```
 
-The build compiles the deck with Bun's browser bundler and inlines every referenced `public/` asset — images and self-hosted fonts included — as data URIs. The resulting file needs no server, no network, and no mercy from conference wifi.
+The build compiles the deck with Bun's browser bundler and inlines every referenced `public/` asset — images and self-hosted fonts included — as data URIs. The file needs no server and keeps presenting when the network disappears: the starter's CDN display fonts fall back to system type offline, and [self-hosting them](docs/deck-authoring.md#fonts) bakes the full typography into the artifact for true airplane mode.
 
 ## 🌌 Themes and Motion
 

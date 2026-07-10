@@ -202,7 +202,7 @@ async function build(args: string[]) {
     const elapsed = formatDuration(performance.now() - startedAt)
     const displayPath = relative(process.cwd(), outputPath) || outputPath
     console.log(
-      `${green}✓${reset} ${cyan}${displayPath}${reset} ${muted}·${reset} ${coral}${formatSize(bytes)}${reset} ${muted}·${reset} ${coral}${elapsed}${reset} ${muted}· one file, fully offline${reset}`
+      `${green}✓${reset} ${cyan}${displayPath}${reset} ${muted}·${reset} ${coral}${formatSize(bytes)}${reset} ${muted}·${reset} ${coral}${elapsed}${reset} ${muted}· one file, works offline${reset}`
     )
   } finally {
     await rm(stagingDirectory, { recursive: true, force: true })

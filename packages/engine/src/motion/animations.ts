@@ -24,33 +24,6 @@ export type TransitionType =
   | 'split' // Content from edges (dramatic)
 
 /**
- * Per-slide transition mapping
- * Each slide gets a transition that matches its narrative purpose
- */
-export const slideTransitions: TransitionType[] = [
-  'portal', // 0: Title - grand entrance
-  'glitch', // 1: Problem - jarring, something's wrong
-  'zoom', // 2: Solution - breakthrough moment!
-  'morph', // 3: WhyHaven - story transition
-  'rise', // 4: Workflow - new section begins
-  'spiral', // 5: Brainstorm - creative energy
-  'slide', // 6: Handoff - standard flow
-  'morph', // 7: Questions - conversational
-  'zoom', // 8: Swarm - expansion/scale
-  'rise', // 9: DeepDives - diving in
-  'slide', // 10: Decisions - flow
-  'portal', // 11: Sibyl - mystical/knowledge
-  'zoom', // 12: Payoff - climax!
-  'slide', // 13: Techniques - reference
-  'slide', // 14: TechniquesAdvanced - reference
-  'glitch', // 15: Validation - technical
-  'split', // 16: CrossCheck - dual-model theme
-  'spiral', // 17: RalphLoop - iteration cycle
-  'portal', // 18: Meta - recursive/meta
-  'morph', // 19: QA - wind down
-]
-
-/**
  * Transition variant factories
  */
 const createSlideVariants = (): Variants => ({
@@ -265,11 +238,6 @@ export function getTransitionSpring(type: TransitionType) {
 }
 
 /**
- * Legacy slide variants (for backwards compatibility)
- */
-export const slideVariants: Variants = createSlideVariants()
-
-/**
  * Staggered reveal for lists
  */
 export const staggerContainer: Variants = {
@@ -341,14 +309,6 @@ export const scaleIn: Variants = {
     scale: 1,
     transition: springs.bouncy,
   },
-}
-
-/**
- * Typewriter effect timing
- */
-export const typewriter = {
-  charDelay: 0.03,
-  cursorBlink: 0.5,
 }
 
 /**
@@ -429,30 +389,6 @@ export const hoverLift = {
   y: -3,
   boxShadow: '0 12px 40px rgba(0,0,0,0.4)',
   transition: springs.snappy,
-}
-
-/**
- * Tool call burst - for when tools spawn
- */
-export const toolBurst: Variants = {
-  hidden: { opacity: 0, scale: 0.9, x: -10 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    x: 0,
-    transition: springs.bouncy,
-  },
-}
-
-/**
- * Stagger for rapid tool spawning (tighter timing)
- */
-export const toolStaggerContainer: Variants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.05, delayChildren: 0.1 },
-  },
 }
 
 /**

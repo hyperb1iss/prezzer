@@ -6,14 +6,15 @@
   "author": "Stefanie Jane <stef@hyperbliss.tech>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/hyperb1iss/prezzer",
+    "url": "git+https://github.com/hyperb1iss/prezzer.git",
     "directory": "packages/create-prezzer"
   },
   "type": "module",
   "bin": {
-    "create-prezzer": "./src/index.ts"
+    "create-prezzer": "bin/create-prezzer.js"
   },
   "files": [
+    "bin",
     "src/index.ts",
     "template",
     "README.md",

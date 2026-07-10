@@ -1,6 +1,14 @@
 import { useCallback, useEffect } from 'react'
 import { useDeck } from './DeckContext'
 
+/**
+ * Interaction starting inside these elements belongs to the content, not
+ * deck navigation. Mark any other embedded demo surface with
+ * `data-prezzer-interactive` to keep the deck's hands off it.
+ */
+export const interactiveElementSelector =
+  'a, button, input, select, textarea, [contenteditable]:not([contenteditable="false"]), [data-prezzer-interactive]'
+
 export interface UseKeyboardShortcutsOptions {
   onToggleFullscreen?: () => void
   onToggleNotes?: () => void
@@ -32,10 +40,7 @@ export function useKeyboardShortcuts({
       if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return
 
       const target = event.target
-      if (
-        target instanceof Element &&
-        target.closest('a, button, input, select, textarea, [contenteditable="true"]')
-      ) {
+      if (target instanceof Element && target.closest(interactiveElementSelector)) {
         return
       }
 

@@ -84,9 +84,7 @@ async function collectFiles(directory: string): Promise<string[]> {
   }
 }
 
-async function inlinePublicAssets(
-  html: string
-): Promise<{ html: string; unreferenced: string[] }> {
+async function inlinePublicAssets(html: string): Promise<{ html: string; unreferenced: string[] }> {
   const publicRoot = resolve('public')
   const files = await collectFiles(publicRoot)
   const unreferenced: string[] = []

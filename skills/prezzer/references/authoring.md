@@ -34,7 +34,7 @@ Notes render in the `n` overlay next to the slide id, deep marker, and beat posi
 
 You author against a 1920×1080 design canvas (override via `Deck`'s `designWidth`/`designHeight`) that scales uniformly to the viewport. Absolute pixel sizes are design pixels — `text-9xl` on the canvas is the same fraction of the screen everywhere. Consequences:
 
-- Design and verify at 16:9; other aspect ratios letterbox. The scale factor is clamped to 0.2–2.0 (not configurable through `Deck`), so extreme viewports can crop or leave slack instead of scaling further.
+- Design and verify at 16:9; other aspect ratios letterbox. The scale factor is clamped to 0.2–2.0 by default (`Deck`'s `minScale`/`maxScale` override it), so extreme viewports can crop or leave slack instead of scaling further.
 - Don't use viewport units (`vw`/`vh`) inside slides; they bypass the scale and drift.
 - `h-full w-full` inside a slide refers to the canvas, which is what you want.
 

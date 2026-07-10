@@ -22,6 +22,9 @@ export interface DeckProps {
   /** Design canvas dimensions; 16:9 projector default */
   designWidth?: number
   designHeight?: number
+  /** Scale clamp for extreme viewports; defaults 0.2 and 2 */
+  minScale?: number
+  maxScale?: number
   /** Extra presenter chrome rendered outside the scaled canvas */
   extraChrome?: ReactNode
   showProgressRail?: boolean
@@ -31,19 +34,21 @@ export interface DeckProps {
 function DeckShell({
   designWidth,
   designHeight,
+  minScale,
+  maxScale,
   extraChrome,
   showProgressRail,
   showScanlines,
 }: Required<
   Pick<DeckProps, 'designWidth' | 'designHeight' | 'showProgressRail' | 'showScanlines'>
 > &
-  Pick<DeckProps, 'extraChrome'>) {
+  Pick<DeckProps, 'extraChrome' | 'minScale' | 'maxScale'>) {
   const { slideIndex, direction, next, prev, slides, theme } = useDeck()
   const { startNextWidget } = useSlideWidgets()
   const [notesOpen, setNotesOpen] = useState(false)
   const [gridOpen, setGridOpen] = useState(false)
   const { toggleFullscreen, exitFullscreen, isFullscreen } = useFullscreen()
-  const { scale, width, height } = useSlideScale({ designWidth, designHeight })
+  const { scale, width, height } = useSlideScale({ designWidth, designHeight, minScale, maxScale })
 
   const handleEscape = useCallback((): boolean => {
     if (gridOpen) {
@@ -146,6 +151,8 @@ export function Deck({
   theme,
   designWidth = 1920,
   designHeight = 1080,
+  minScale,
+  maxScale,
   extraChrome,
   showProgressRail = true,
   showScanlines = true,
@@ -157,6 +164,8 @@ export function Deck({
           <DeckShell
             designWidth={designWidth}
             designHeight={designHeight}
+            minScale={minScale}
+            maxScale={maxScale}
             extraChrome={extraChrome}
             showProgressRail={showProgressRail}
             showScanlines={showScanlines}

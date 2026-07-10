@@ -66,7 +66,7 @@ It is a **corner stamp** — absolutely positioned top-right of the canvas. For 
 </div>
 ```
 
-`{ count?: number; className?: string; palette?: string[] }` — defaults: 32 stars, cyan/purple/coral from the theme. Star positions are seeded, not random, so renders are deterministic. It fills its nearest positioned ancestor — give the parent `position: relative`.
+`{ count?: number; className?: string; palette?: string[] }` — defaults: 32 stars, cyan/purple/coral from the theme. Star positions are seeded, not random, so renders are deterministic, and the field goes fully still under `prefers-reduced-motion`. It fills its nearest positioned ancestor — give the parent `position: relative`.
 
 ## SlideArt
 

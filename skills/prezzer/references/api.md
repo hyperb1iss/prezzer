@@ -9,16 +9,17 @@ import { Deck } from "prezzer";
 <Deck slides={slides} acts={acts} theme={theme} />;
 ```
 
-| Prop               | Type                  | Default       | Notes                                                                                                                                                      |
-| ------------------ | --------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `slides`           | `readonly SlideDef[]` | required      | Navigation tolerates empty and live-changing lists; an empty deck renders a placeholder                                                                    |
-| `acts`             | `readonly ActDef[]`   | derived       | Derived acts get one entry per distinct `act` number, titled `act N`, colored from the theme palette in order purple → cyan → coral → yellow → green → red |
-| `theme`            | `Theme`               | `silkCircuit` | See [theming.md](theming.md)                                                                                                                               |
-| `designWidth`      | `number`              | `1920`        | Fixed design canvas, uniformly scaled to the viewport (reveal.js technique)                                                                                |
-| `designHeight`     | `number`              | `1080`        | Author in absolute pixels against this canvas; sizes stay stable at any window size                                                                        |
-| `extraChrome`      | `ReactNode`           | —             | Rendered outside the scaled canvas, inside the themed viewport                                                                                             |
-| `showProgressRail` | `boolean`             | `true`        |                                                                                                                                                            |
-| `showScanlines`    | `boolean`             | `true`        | Subtle CRT texture layer                                                                                                                                   |
+| Prop                   | Type                  | Default       | Notes                                                                                                                                                      |
+| ---------------------- | --------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slides`               | `readonly SlideDef[]` | required      | Navigation tolerates empty and live-changing lists; an empty deck renders a placeholder                                                                    |
+| `acts`                 | `readonly ActDef[]`   | derived       | Derived acts get one entry per distinct `act` number, titled `act N`, colored from the theme palette in order purple → cyan → coral → yellow → green → red |
+| `theme`                | `Theme`               | `silkCircuit` | See [theming.md](theming.md)                                                                                                                               |
+| `designWidth`          | `number`              | `1920`        | Fixed design canvas, uniformly scaled to the viewport (reveal.js technique)                                                                                |
+| `designHeight`         | `number`              | `1080`        | Author in absolute pixels against this canvas; sizes stay stable at any window size                                                                        |
+| `minScale`, `maxScale` | `number`              | `0.2`, `2`    | Clamp on the viewport scale factor for extreme displays (tiny embeds, LED walls)                                                                           |
+| `extraChrome`          | `ReactNode`           | —             | Rendered outside the scaled canvas, inside the themed viewport                                                                                             |
+| `showProgressRail`     | `boolean`             | `true`        |                                                                                                                                                            |
+| `showScanlines`        | `boolean`             | `true`        | Subtle CRT texture layer                                                                                                                                   |
 
 `Deck` composes `MotionConfig reducedMotion="user"` → `DeckProvider` → `SlideWidgetProvider` → the shell (scaled canvas, keyboard and touch nav, notes and grid overlays, badge, progress rail). Compose `DeckProvider` and the pieces manually only when the shell's layout genuinely doesn't fit.
 
@@ -79,9 +80,9 @@ The root also exports the shell's building blocks — `useKeyboardShortcuts`, `u
 | `a`                        | Fire the autoplay signal (increments `autoplaySignal`)                                         |
 | `esc`                      | Close grid, then notes, then exit fullscreen                                                   |
 
-Shortcuts are skipped when `meta`, `ctrl`, or `alt` is held (`shift` stays live — it upgrades advances to whole-slide jumps) or when the event target is inside the exact selector `a, button, input, select, textarea, [contenteditable="true"]` — browser shortcuts and embedded interactive demos keep working. The selector is literal: `contenteditable=""` or `"plaintext-only"` variants and custom focusable surfaces are **not** covered, so keep embedded demos on real interactive elements. Page up/down means presenter clickers work unconfigured.
+Shortcuts are skipped when `meta`, `ctrl`, or `alt` is held (`shift` stays live — it upgrades advances to whole-slide jumps) or when the event target is inside the guard selector: `a`, `button`, `input`, `select`, `textarea`, any `[contenteditable]` not set to `"false"`, or anything under `[data-prezzer-interactive]` — browser shortcuts and embedded interactive demos keep working. Mark custom demo surfaces (canvas playgrounds, ARIA widgets) with `data-prezzer-interactive` to keep the deck's hands off them; the same guard applies to touch. Page up/down means presenter clickers work unconfigured.
 
-Touch shares the exact same ordering guarantees: horizontal swipes past 50px navigate, taps on the outer 20% screen edges step back/forward, and center taps advance. **Every forward gesture — left swipe, right-edge tap, center tap — starts a pending widget before it advances the deck**; backward gestures never do. Taps must be under 300ms with less than 10px of movement, and touches starting on interactive elements (same selector as above) are ignored.
+Touch shares the exact same ordering guarantees: horizontal swipes past 50px navigate, taps on the outer 20% screen edges step back/forward, and center taps advance. **Every forward gesture — left swipe, right-edge tap, center tap — starts a pending widget before it advances the deck**; backward gestures never do. Taps must be under 300ms with less than 10px of movement, and touches starting inside the guard selector above are ignored.
 
 ## Hash deep links
 

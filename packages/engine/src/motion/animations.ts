@@ -21,7 +21,7 @@ export type TransitionType =
   | 'rise' // Vertical from bottom (new sections)
   | 'spiral' // Rotation + scale (playful)
   | 'morph' // Pure crossfade (elegant)
-  | 'split' // Content from edges (dramatic)
+  | 'split' // Centered horizontal compress/stretch (dramatic)
 
 /**
  * Transition variant factories

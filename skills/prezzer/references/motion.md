@@ -1,6 +1,6 @@
 # Motion
 
-All motion runs on `motion` (Motion for React, a peer dependency). `Deck` wraps everything in `MotionConfig reducedMotion="user"`, which disables **transform and layout** animation for `prefers-reduced-motion` users — slide transitions and beat reveals degrade gracefully with no extra work. It does _not_ silence opacity, color, filter, or shadow animation, so looping ambience (`glowPulse`, `crtFlicker`) and any autoplaying flourish keep running; gate those yourself with `useReducedMotion()` from `motion/react` when the loop is more than a subtle shimmer.
+All motion runs on `motion` (Motion for React, a peer dependency). `Deck` wraps everything in `MotionConfig reducedMotion="user"`, which disables **transform and layout** animation for `prefers-reduced-motion` users — slide transitions and beat reveals degrade gracefully with no extra work. It does _not_ silence opacity, color, filter, or shadow animation, so looping ambience (`glowPulse`, `crtFlicker`) and any autoplaying flourish keep running; gate those yourself with `useReducedMotion()` from `motion/react` when the loop is more than a subtle shimmer (the built-in `Starfield` already does).
 
 ```tsx
 import { motion } from "motion/react";

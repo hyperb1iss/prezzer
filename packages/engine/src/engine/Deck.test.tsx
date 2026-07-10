@@ -37,6 +37,18 @@ function DenyState() {
   return <p>{denied ? 'denied' : 'allowed'}</p>
 }
 
+function InteractiveDemo() {
+  const denied = useDenyMode()
+  return (
+    <div>
+      <p>{denied ? 'denied' : 'allowed'}</p>
+      <div data-prezzer-interactive>
+        <span>demo surface</span>
+      </div>
+    </div>
+  )
+}
+
 function BeatState() {
   return (
     <Beat at={1}>
@@ -73,6 +85,16 @@ describe('Deck', () => {
     render(<Deck slides={deckWith(DenyState)} showProgressRail={false} />)
 
     fireEvent.keyDown(window, { key: 'd', metaKey: true })
+    expect(screen.getByText('allowed')).toBeTruthy()
+
+    fireEvent.keyDown(window, { key: 'd' })
+    expect(screen.getByText('denied')).toBeTruthy()
+  })
+
+  test('keeps hands off surfaces marked data-prezzer-interactive', () => {
+    render(<Deck slides={deckWith(InteractiveDemo)} showProgressRail={false} />)
+
+    fireEvent.keyDown(screen.getByText('demo surface'), { key: 'd' })
     expect(screen.getByText('allowed')).toBeTruthy()
 
     fireEvent.keyDown(window, { key: 'd' })

@@ -1,4 +1,4 @@
-import { motion } from 'motion/react'
+import { motion, useReducedMotion } from 'motion/react'
 import { useMemo } from 'react'
 import { useDeckTheme } from '../engine/DeckContext'
 
@@ -27,6 +27,9 @@ function randomFraction(seed: number): number {
 
 export function Starfield({ count = 32, className = '', palette }: StarfieldProps) {
   const theme = useDeckTheme()
+  // MotionConfig only silences transform animation; the opacity pulse
+  // and infinite drift need an explicit gate to actually go still.
+  const reduceMotion = useReducedMotion()
   const colors = useMemo(
     () => palette ?? [theme.colors.neonCyan, theme.colors.electricPurple, theme.colors.coral],
     [palette, theme]
@@ -61,17 +64,25 @@ export function Starfield({ count = 32, className = '', palette }: StarfieldProp
             backgroundColor: star.color,
             opacity: star.opacity,
           }}
-          animate={{
-            x: [0, star.driftX, 0],
-            y: [0, star.driftY, 0],
-            opacity: [star.opacity * 0.6, star.opacity, star.opacity * 0.6],
-          }}
-          transition={{
-            duration: star.duration,
-            repeat: Number.POSITIVE_INFINITY,
-            delay: star.delay,
-            ease: 'easeInOut',
-          }}
+          animate={
+            reduceMotion
+              ? undefined
+              : {
+                  x: [0, star.driftX, 0],
+                  y: [0, star.driftY, 0],
+                  opacity: [star.opacity * 0.6, star.opacity, star.opacity * 0.6],
+                }
+          }
+          transition={
+            reduceMotion
+              ? undefined
+              : {
+                  duration: star.duration,
+                  repeat: Number.POSITIVE_INFINITY,
+                  delay: star.delay,
+                  ease: 'easeInOut',
+                }
+          }
         />
       ))}
     </div>

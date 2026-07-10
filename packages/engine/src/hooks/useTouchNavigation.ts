@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react'
+import { interactiveElementSelector } from '../engine/useKeyboardShortcuts'
 
 interface UseTouchNavigationOptions {
   onNext: () => void
@@ -35,8 +36,7 @@ export function useTouchNavigation({
     touchStartY.current = touch.clientY
     touchStartTime.current = Date.now()
     startedOnInteractiveElement.current =
-      event.target instanceof Element &&
-      event.target.closest('a, button, input, select, textarea, [contenteditable="true"]') !== null
+      event.target instanceof Element && event.target.closest(interactiveElementSelector) !== null
   }, [])
 
   const handleTouchEnd = useCallback(

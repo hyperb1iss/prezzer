@@ -7,24 +7,40 @@ import { tmpdir } from 'node:os'
 import { basename, dirname, isAbsolute, relative, resolve, sep } from 'node:path'
 import prezzerPlugin from '../bun-plugin'
 
-const purple = '\x1b[38;2;225;53;255m'
-const cyan = '\x1b[38;2;128;255;234m'
-const red = '\x1b[38;2;255;99;99m'
-const muted = '\x1b[2m'
-const reset = '\x1b[0m'
+const color = (code: string) => (Bun.enableANSIColors ? code : '')
+const purple = color('\x1b[38;2;225;53;255m')
+const cyan = color('\x1b[38;2;128;255;234m')
+const coral = color('\x1b[38;2;255;106;193m')
+const green = color('\x1b[38;2;80;250;123m')
+const red = color('\x1b[38;2;255;99;99m')
+const muted = color('\x1b[2m')
+const reset = color('\x1b[0m')
 
 function printHelp() {
   console.log(`${purple}prezzer${reset} ${muted}build cinematic decks with Bun${reset}
 
 ${cyan}Usage${reset}
-  prezzer build [entry] [--outdir <dir>] [--no-minify]
+  prezzer build [entry] [options]
 
 ${cyan}Commands${reset}
-  build    emit one self-contained HTML file
+  build    bake one self-contained HTML file
+
+${cyan}Options${reset}
+  --outdir <dir>   output directory ${muted}(default: dist)${reset}
+  --no-minify      keep readable output while diagnosing builds
 
 ${cyan}Examples${reset}
   prezzer build
   prezzer build talk.html --outdir release`)
+}
+
+function formatSize(bytes: number): string {
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  return `${(bytes / 1024).toFixed(1)} KB`
+}
+
+function formatDuration(ms: number): string {
+  return ms >= 1000 ? `${(ms / 1000).toFixed(2)}s` : `${Math.round(ms)}ms`
 }
 
 function fail(message: string): never {
@@ -155,6 +171,8 @@ async function build(args: string[]) {
     fail('--outdir cannot overwrite files outside the output directory')
   }
   const stagingDirectory = await mkdtemp(resolve(tmpdir(), 'prezzer-build-'))
+  const startedAt = performance.now()
+  console.log(`${purple}prezzer${reset} ${muted}baking${reset} ${cyan}${entry}${reset}`)
 
   try {
     const result = await Bun.build({
@@ -179,9 +197,13 @@ async function build(args: string[]) {
 
     const html = await inlinePublicAssets(await standalone.text())
     await mkdir(outputDirectory, { recursive: true })
-    await Bun.write(outputPath, html)
+    const bytes = await Bun.write(outputPath, html)
 
-    console.log(`${purple}prezzer${reset} built ${cyan}${outputPath}${reset}`)
+    const elapsed = formatDuration(performance.now() - startedAt)
+    const displayPath = relative(process.cwd(), outputPath) || outputPath
+    console.log(
+      `${green}✓${reset} ${cyan}${displayPath}${reset} ${muted}·${reset} ${coral}${formatSize(bytes)}${reset} ${muted}·${reset} ${coral}${elapsed}${reset} ${muted}· one file, fully offline${reset}`
+    )
   } finally {
     await rm(stagingDirectory, { recursive: true, force: true })
   }

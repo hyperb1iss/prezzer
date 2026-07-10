@@ -3,12 +3,13 @@
 import { cp, mkdir, readdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
 import { basename, relative, resolve } from 'node:path'
 
-const purple = '\x1b[38;2;225;53;255m'
-const cyan = '\x1b[38;2;128;255;234m'
-const green = '\x1b[38;2;80;250;123m'
-const red = '\x1b[38;2;255;99;99m'
-const muted = '\x1b[2m'
-const reset = '\x1b[0m'
+const color = (code: string) => (Bun.enableANSIColors ? code : '')
+const purple = color('\x1b[38;2;225;53;255m')
+const cyan = color('\x1b[38;2;128;255;234m')
+const green = color('\x1b[38;2;80;250;123m')
+const red = color('\x1b[38;2;255;99;99m')
+const muted = color('\x1b[2m')
+const reset = color('\x1b[0m')
 
 interface Options {
   target?: string
@@ -126,6 +127,8 @@ const name = packageName(target)
 const template = resolve(import.meta.dir, '../template')
 const prezzerVersion = process.env.PREZZER_PACKAGE_SPEC ?? '^0.1.0'
 
+console.log(`${purple}create-prezzer${reset} ${muted}scaffolding${reset} ${cyan}${name}${reset}`)
+
 await mkdir(target, { recursive: true })
 await cp(template, target, { recursive: true, force: true })
 await rm(resolve(target, 'package.json'), { force: true })
@@ -154,10 +157,13 @@ if (options.git) await initializeGit(target)
 
 const displayPath = relative(process.cwd(), target) || '.'
 console.log(`
-${green}created${reset} ${purple}${name}${reset} in ${cyan}${displayPath}${reset}
+${green}✓${reset} ${purple}${name}${reset} is ready in ${cyan}${displayPath}${reset}
 `)
-if (displayPath !== '.') console.log(`  cd ${displayPath}`)
-if (!options.install) console.log('  bun install')
-console.log(`  bun dev
+if (displayPath !== '.') console.log(`  ${cyan}cd${reset} ${displayPath}`)
+if (!options.install) console.log(`  ${cyan}bun${reset} install`)
+console.log(`  ${cyan}bun${reset} dev
 
-${muted}build the offline deck anytime with bun run build${reset}`)
+${muted}space advances · g grid · n notes · f fullscreen${reset}
+${muted}bake the one-file offline deck anytime with${reset} bun run build
+
+${purple}build something electric${reset} ${cyan}⚡${reset}`)

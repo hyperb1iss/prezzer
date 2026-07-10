@@ -34,6 +34,7 @@
 </p>
 
 <p align="center">
+  <a href="https://hyperb1iss.github.io/prezzer/">🎭 Live Demo</a> •
   <a href="#-quick-start">Quick Start</a> •
   <a href="#-agent-fast-path">Agents</a> •
   <a href="#-slides-are-components">Slides as Code</a> •
@@ -48,6 +49,8 @@
 </p>
 
 A Prezzer deck is real software. It lives in its own repository, renders with real React components, and builds to a single HTML file you can present from `file://`, attach to an email, or drop on any static host. No cloud, no export pipeline, no slide-shaped WYSIWYG — just code that performs.
+
+**See it live:** the [demo deck](https://hyperb1iss.github.io/prezzer/) is Prezzer presenting itself — every claim on screen is the engine running, baked by CI into the exact one-file artifact it describes.
 
 ## ✨ Features
 
@@ -186,6 +189,7 @@ Components read the active theme with `useDeckTheme()`, and every token doubles 
 | [`prezzer`](packages/engine)                | The React engine: deck shell, presenter chrome, theme tokens, motion primitives, widget registry, and the `prezzer build` CLI |
 | [`create-prezzer`](packages/create-prezzer) | Powers `bun create prezzer` and owns the starter deck                                                                         |
 | [`examples/hello`](examples/hello)          | The reference deck — exercises the published package boundary and the complete build path                                     |
+| [`examples/demo`](examples/demo)            | The showcase deck — Prezzer presenting itself, deployed to [GitHub Pages](https://hyperb1iss.github.io/prezzer/) by CI        |
 
 The built-in chrome is framework-free CSS. Decks can use Tailwind, vanilla CSS, CSS modules, or any other styling approach without changing the engine.
 

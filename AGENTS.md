@@ -27,6 +27,7 @@ Run `bun test` **from the repo root** — the happy-dom registration lives in th
 - `packages/engine` publishes `prezzer`: the React deck shell, presenter chrome, theme tokens, motion primitives, widget registry, and the `prezzer dev` / `prezzer build` CLI (`bin/prezzer.ts`).
 - `packages/create-prezzer` publishes `create-prezzer` and owns the starter template.
 - `examples/hello` is the reference deck — it exercises the published package boundary and the complete standalone-build path.
+- `examples/demo` is the showcase deck — Prezzer presenting itself; `.github/workflows/pages.yml` bakes it and deploys `examples/demo/dist` to GitHub Pages on every push to main.
 - `skills/prezzer` is the deck-authoring skill for coding agents.
 - `docs/` holds deck authoring and release guides; releases publish via GitHub OIDC trusted publishing ([docs/releasing.md](docs/releasing.md)).
 

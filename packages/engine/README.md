@@ -49,6 +49,6 @@ prezzer build
 prezzer build talk.html --outdir release
 ```
 
-`prezzer dev` serves the deck with hot reload and resolves rooted `public/` paths the same way the build inlines them. `prezzer build` uses Bun's browser compiler and Tailwind plugin to emit one self-contained HTML file; pass `--no-minify` while diagnosing output.
+`prezzer dev` serves the deck with hot reload and rooted `public/` paths, bound to localhost unless `--host` says otherwise. `prezzer build` uses Bun's browser compiler and Tailwind plugin to emit one self-contained HTML file that inlines literally referenced `public/` assets (and warns about the rest); pass `--no-minify` while diagnosing output.
 
 Full authoring guidance lives in the [repository documentation](https://github.com/hyperb1iss/prezzer/blob/main/docs/deck-authoring.md).

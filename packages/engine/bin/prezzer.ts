@@ -30,6 +30,7 @@ ${cyan}Commands${reset}
 ${cyan}Options${reset}
   dev
     --port <number>  port to listen on ${muted}(default: $PORT or 3000)${reset}
+    --host <name>    bind address ${muted}(default: 127.0.0.1; 0.0.0.0 exposes to your network)${reset}
   build
     --outdir <dir>   output directory ${muted}(default: dist)${reset}
     --no-minify      keep readable output while diagnosing builds
@@ -54,6 +55,9 @@ function fail(message: string): never {
   process.exit(1)
 }
 
+/** public/ files the bundler resolved itself; already inlined, never warned about */
+const bundlerResolvedAssets = new Set<string>()
+
 const publicAssetsPlugin: BunPlugin = {
   name: 'prezzer-public-assets',
   setup(builder) {
@@ -63,7 +67,9 @@ const publicAssetsPlugin: BunPlugin = {
         ? relative(process.cwd(), path)
         : path.slice(1)
       const publicPath = resolve('public', projectPath)
-      return (await Bun.file(publicPath).exists()) ? { path: publicPath } : undefined
+      if (!(await Bun.file(publicPath).exists())) return undefined
+      bundlerResolvedAssets.add(publicPath)
+      return { path: publicPath }
     })
   },
 }
@@ -92,7 +98,7 @@ async function inlinePublicAssets(html: string): Promise<{ html: string; unrefer
   for (const path of files) {
     const assetPath = `/${relative(publicRoot, path).replaceAll('\\', '/')}`
     if (!html.includes(assetPath)) {
-      unreferenced.push(assetPath)
+      if (!bundlerResolvedAssets.has(path)) unreferenced.push(assetPath)
       continue
     }
 
@@ -135,6 +141,7 @@ async function canonicalize(path: string): Promise<string> {
 async function dev(args: string[]) {
   let entry = 'index.html'
   let port: number | undefined
+  let hostname = '127.0.0.1'
   let entrySet = false
 
   for (let index = 0; index < args.length; index += 1) {
@@ -143,6 +150,9 @@ async function dev(args: string[]) {
       const value = Number(args[index + 1])
       if (!Number.isInteger(value) || value <= 0) fail('--port needs a positive number')
       port = value
+      index += 1
+    } else if (argument === '--host') {
+      hostname = args[index + 1] ?? fail('--host needs a hostname')
       index += 1
     } else if (argument?.startsWith('-')) {
       fail(`unknown option: ${argument}`)
@@ -161,6 +171,7 @@ async function dev(args: string[]) {
   const publicRoot = resolve('public')
   const server = Bun.serve({
     port,
+    hostname,
     routes: { '/': index },
     development: { hmr: true, console: true },
     async fetch(request) {

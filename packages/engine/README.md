@@ -1,6 +1,11 @@
-# prezzer
+# 🎭 prezzer
 
-The React presentation engine behind [Prezzer](https://github.com/hyperb1iss/prezzer).
+> _Cinematic presentations as code — Bun-native, React-powered, one offline HTML file._
+
+[![npm](https://img.shields.io/npm/v/prezzer?logo=npm&logoColor=white&color=e135ff)](https://www.npmjs.com/package/prezzer)
+[![License](https://img.shields.io/github/license/hyperb1iss/prezzer?color=80ffea)](https://github.com/hyperb1iss/prezzer/blob/main/LICENSE)
+
+The React presentation engine behind [Prezzer](https://github.com/hyperb1iss/prezzer): beat-driven slides, presenter chrome, SilkCircuit theming, motion primitives, and a build command that bakes the whole deck into one self-contained HTML file.
 
 For a new deck, use the scaffolder:
 

@@ -1,6 +1,11 @@
-# create-prezzer
+# 🎭 create-prezzer
 
-Create a complete Bun-native Prezzer deck:
+> _A cinematic Bun-native presentation, scaffolded in seconds._
+
+[![npm](https://img.shields.io/npm/v/create-prezzer?logo=npm&logoColor=white&color=ff6ac1)](https://www.npmjs.com/package/create-prezzer)
+[![License](https://img.shields.io/github/license/hyperb1iss/prezzer?color=80ffea)](https://github.com/hyperb1iss/prezzer/blob/main/LICENSE)
+
+Create a complete [Prezzer](https://github.com/hyperb1iss/prezzer) deck:
 
 ```bash
 bun create prezzer my-talk

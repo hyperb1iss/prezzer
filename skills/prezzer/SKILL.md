@@ -52,6 +52,26 @@ Create theme overrides with `createTheme()` and read the active theme with `useD
 
 Built-in chrome is plain CSS. Deck content can use Tailwind through the generated `bunfig.toml`, vanilla CSS, or another styling system.
 
+## Gotchas from the first consumer (argocd-prez)
+
+- The `bun dev` server has no `public/` convention; rooted urls like
+  `/fonts/x.woff2` in CSS fail to resolve in dev even though `prezzer build`
+  inlines them fine. Mirror the CLI's public-assets resolver as a local
+  serve plugin registered in `bunfig.toml` until the engine ships one.
+- `<Beat>` wrappers are motion-transformed, so they become the containing
+  block for absolutely-positioned children. Give those children explicit
+  `top`/`left` coordinates; `bottom`-anchoring lands at the wrapper's flow
+  position, not the slide bottom. Prefer flow layout for stacked groups.
+- `RolloutBadge` is a corner stamp (absolutely positioned). For a badge in
+  running text or a card, build a small inline chip instead.
+- Hash routing is positional: `#16` is the sixteenth slide, not outline id
+  S16. When an outline skips numbers, the two drift — navigate by position.
+- Keep every live number, commit hash, and status badge in one
+  `src/data/facts.ts`; the day-of truth pass then re-stamps a single file.
+- agent-browser daemons share one socket across agents; an orphaned Chrome
+  wedges CDP for everyone. `pkill -9 -f ".agent-browser/browsers"` and
+  relaunch, and run screenshot loops as one long-timeout foreground command.
+
 ## Verify the artifact
 
 ```bash

@@ -13,7 +13,7 @@ Run the narrow gate while editing; run both before handing off.
 
 ## CLI
 
-`prezzer dev [entry] [--port <n>] [--host <name>]` — hot-reload dev server that also serves `public/`, bound to `127.0.0.1` unless `--host` says otherwise (the starter's `bun dev` script runs this).
+`prezzer dev [entry] [--port <n>] [--host <name>]` — hot-reload dev server that also serves `public/`, on `127.0.0.1:1609` by default (1609 because 16:9; `--port` beats `$PORT` beats the default, `--host` exposes beyond loopback). The starter's `bun dev` script runs this.
 
 `prezzer build [entry] [--outdir <dir>] [--no-minify]` — defaults `index.html` and `dist`. `--outdir` must be inside the project and can't contain the entry. Use `--no-minify` when diagnosing what landed in the artifact.
 

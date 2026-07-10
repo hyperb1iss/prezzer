@@ -29,7 +29,7 @@ ${cyan}Commands${reset}
 
 ${cyan}Options${reset}
   dev
-    --port <number>  port to listen on ${muted}(default: $PORT or 3000)${reset}
+    --port <number>  port to listen on ${muted}(default: $PORT or 1609 — 16:9, like the canvas)${reset}
     --host <name>    bind address ${muted}(default: 127.0.0.1; 0.0.0.0 exposes to your network)${reset}
   build
     --outdir <dir>   output directory ${muted}(default: dist)${reset}
@@ -140,7 +140,9 @@ async function canonicalize(path: string): Promise<string> {
 
 async function dev(args: string[]) {
   let entry = 'index.html'
-  let port: number | undefined
+  // 1609 — 16:9, like the canvas
+  const envPort = Number(process.env.BUN_PORT ?? process.env.PORT ?? process.env.NODE_PORT)
+  let port = Number.isInteger(envPort) && envPort > 0 ? envPort : 1609
   let hostname = '127.0.0.1'
   let entrySet = false
 

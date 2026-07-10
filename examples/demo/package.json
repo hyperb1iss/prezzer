@@ -1,0 +1,24 @@
+{
+  "name": "demo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "prezzer dev",
+    "build": "prezzer build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "motion": "^12.42.2",
+    "prezzer": "workspace:*",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "bun-plugin-tailwind": "^0.1.2",
+    "tailwindcss": "^4.3.2",
+    "typescript": "^7.0.2"
+  }
+}

@@ -16,6 +16,23 @@
         "typescript": "^7.0.2",
       },
     },
+    "examples/demo": {
+      "name": "demo",
+      "version": "0.0.0",
+      "dependencies": {
+        "motion": "^12.42.2",
+        "prezzer": "workspace:*",
+        "react": "^19.2.7",
+        "react-dom": "^19.2.7",
+      },
+      "devDependencies": {
+        "@types/react": "^19.0.0",
+        "@types/react-dom": "^19.0.0",
+        "bun-plugin-tailwind": "^0.1.2",
+        "tailwindcss": "^4.3.2",
+        "typescript": "^7.0.2",
+      },
+    },
     "examples/hello": {
       "name": "hello",
       "version": "0.0.0",
@@ -48,7 +65,7 @@
       "name": "prezzer",
       "version": "0.1.0",
       "bin": {
-        "prezzer": "./bin/prezzer.ts",
+        "prezzer": "bin/prezzer.js",
       },
       "dependencies": {
         "bun-plugin-tailwind": "^0.1.2",
@@ -202,6 +219,8 @@
     "create-prezzer": ["create-prezzer@workspace:packages/create-prezzer"],
 
     "csstype": ["csstype@3.2.3", "", {}, "sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ=="],
+
+    "demo": ["demo@workspace:examples/demo"],
 
     "dequal": ["dequal@2.0.3", "", {}, "sha512-0je+qPKHEMohvfRTCEo3CrPG6cAzAYgmzKyxRiYSSDkS6eGJdyVJm7WaYA5ECaAD9wLB2T4EEeymA5aFVcYXCA=="],
 

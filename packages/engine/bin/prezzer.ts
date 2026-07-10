@@ -12,6 +12,7 @@ const purple = color('\x1b[38;2;225;53;255m')
 const cyan = color('\x1b[38;2;128;255;234m')
 const coral = color('\x1b[38;2;255;106;193m')
 const green = color('\x1b[38;2;80;250;123m')
+const yellow = color('\x1b[38;2;241;250;140m')
 const red = color('\x1b[38;2;255;99;99m')
 const muted = color('\x1b[2m')
 const reset = color('\x1b[0m')
@@ -83,13 +84,19 @@ async function collectFiles(directory: string): Promise<string[]> {
   }
 }
 
-async function inlinePublicAssets(html: string): Promise<string> {
+async function inlinePublicAssets(
+  html: string
+): Promise<{ html: string; unreferenced: string[] }> {
   const publicRoot = resolve('public')
   const files = await collectFiles(publicRoot)
+  const unreferenced: string[] = []
 
   for (const path of files) {
     const assetPath = `/${relative(publicRoot, path).replaceAll('\\', '/')}`
-    if (!html.includes(assetPath)) continue
+    if (!html.includes(assetPath)) {
+      unreferenced.push(assetPath)
+      continue
+    }
 
     const file = Bun.file(path)
     const base64 = Buffer.from(await file.arrayBuffer()).toString('base64')
@@ -99,7 +106,7 @@ async function inlinePublicAssets(html: string): Promise<string> {
     )
   }
 
-  return html
+  return { html, unreferenced }
 }
 
 function isWithin(parent: string, child: string) {
@@ -252,9 +259,15 @@ async function build(args: string[]) {
     const standalone = result.outputs.find((output) => output.path === stagedOutputPath)
     if (!standalone) fail('Bun did not emit the standalone deck')
 
-    const html = await inlinePublicAssets(await standalone.text())
+    const { html, unreferenced } = await inlinePublicAssets(await standalone.text())
     await mkdir(outputDirectory, { recursive: true })
     const bytes = await Bun.write(outputPath, html)
+
+    for (const assetPath of unreferenced) {
+      console.warn(
+        `${yellow}⚠${reset} ${muted}public${assetPath} never appears literally in the output — not inlined; runtime-built paths break offline${reset}`
+      )
+    }
 
     const elapsed = formatDuration(performance.now() - startedAt)
     const displayPath = relative(process.cwd(), outputPath) || outputPath

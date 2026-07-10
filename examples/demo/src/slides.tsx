@@ -213,7 +213,7 @@ function Beats() {
 const bakeLines = [
   { text: '$ prezzer build', tone: 'muted' },
   { text: 'prezzer baking index.html', tone: 'body' },
-  { text: '✓ dist/index.html · 361.0 KB · 235ms · one file, works offline', tone: 'green' },
+  { text: '✓ dist/index.html · one file, works offline', tone: 'green' },
 ] as const
 
 function BakeReplay() {

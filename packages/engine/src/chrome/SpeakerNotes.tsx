@@ -16,7 +16,7 @@ export function SpeakerNotes() {
       transition={{ type: 'spring', stiffness: 300, damping: 32 }}
       className="prezzer-speaker-notes"
       style={{
-        backgroundColor: 'rgba(13, 13, 23, 0.94)',
+        backgroundColor: `${theme.colors.terminalBlack}f0`,
         borderColor: `${theme.colors.electricPurple}44`,
       }}
     >
@@ -40,7 +40,7 @@ export function SpeakerNotes() {
           <li
             key={note}
             className="prezzer-speaker-note"
-            style={{ color: 'rgba(240, 240, 245, 0.85)' }}
+            style={{ color: `${theme.colors.textPrimary}d9` }}
           >
             <span style={{ color: theme.colors.neonCyan }}>▸ </span>
             {note}

@@ -24,7 +24,7 @@ export function GridOverview({ onClose }: GridOverviewProps) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="prezzer-grid-overview"
-      style={{ backgroundColor: 'rgba(10, 10, 18, 0.92)' }}
+      style={{ backgroundColor: `${theme.colors.deepBlack}eb` }}
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose()
       }}

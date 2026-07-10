@@ -81,6 +81,22 @@ const theme = createTheme({
 
 Components read the active theme through `useDeckTheme()`. The shell also exposes every token as a `--prezzer-*` custom property for CSS.
 
+## Fonts
+
+The starter loads Clash Display, Satoshi, and Geist Mono from font CDNs, with system fallbacks when the network is unavailable. Those `<link>` tags stay external in the built file, so a deck presented fully offline falls back to system fonts.
+
+For an artifact whose typography survives airplane mode, self-host instead: download the `woff2` files into `public/fonts/`, declare them in `src/index.css`, and remove the CDN links.
+
+```css
+@font-face {
+  font-family: "Clash Display";
+  src: url(/fonts/ClashDisplay-Semibold.woff2) format("woff2");
+  font-weight: 600;
+}
+```
+
+`prezzer build` inlines every referenced `public/` asset as a data URI, fonts included, so the deck stays one self-contained file.
+
 ## Verify what gets presented
 
 ```bash

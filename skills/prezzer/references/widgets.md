@@ -35,7 +35,7 @@ The contract, from `prezzer/widgets` (this subpath is the only source — the ro
 import { type DeckWidgetHandle, useWidgetRegistration } from "prezzer/widgets";
 ```
 
-Implement `DeckWidgetHandle` (`start()`, `isStarted()`) via `useImperativeHandle` on the ref that `useWidgetRegistration()` returns. Ordering guarantee: every advance — space, `→`, `pgdn`, or a center tap — starts the first unstarted widget in registration order and consumes that advance; once all widgets on the slide report started, advances move the deck again. `shift`+arrow always skips the whole slide regardless of pending widgets.
+Implement `DeckWidgetHandle` (`start()`, `isStarted()`) via `useImperativeHandle` on the ref that `useWidgetRegistration()` returns. Ordering guarantee: every forward advance — space, `→`, `pgdn`, and every forward touch gesture (left swipe, right-edge tap, center tap) — starts the first unstarted widget in registration order and consumes that advance; once all widgets on the slide report started, advances move the deck again. `shift` plus any advance key always skips the whole slide regardless of pending widgets.
 
 Verified working pattern (this is `examples/hello`'s count-up, the reference implementation):
 

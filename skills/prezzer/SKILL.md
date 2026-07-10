@@ -34,11 +34,13 @@ The generated repository is the contract: `index.html` is the entry, `src/main.t
 | Import                            | Provides                                                                                                                                   |
 | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | `prezzer`                         | `Deck`, `DeckProvider`, `Beat`, `useBeat`/`useDeck`/`useDenyMode`/`useDeckTheme`, `SlideDef`/`ActDef` types, theme tokens, motion variants |
-| `prezzer/chrome`                  | `SlideHeader`, `StatRail`, `CreedChip`, `RolloutBadge`, `Starfield`, `SlideArt`                                                            |
-| `prezzer/widgets`                 | `DeckWidgetHandle`, `useWidgetRegistration` — **not re-exported from the root**; this subpath is the only source                           |
+| `prezzer/chrome`                  | `SlideHeader`, `StatRail`, `CreedChip`, `RolloutBadge`, `Starfield`, `SlideArt` (plus the shell overlays for custom shells)                |
+| `prezzer/widgets`                 | `DeckWidgetHandle`, `useWidgetRegistration` (plus `SlideWidgetProvider` for manual composition) — **not re-exported from the root**        |
 | `prezzer/theme`, `prezzer/motion` | Focused imports of the same tokens and variants the root exports                                                                           |
 | `prezzer/styles.css`              | The shell and chrome styles; import once in the entry                                                                                      |
 | `prezzer/bun-plugin`              | Keeps linked local dev on one React/Motion instance                                                                                        |
+
+The table lists the working set, not the exhaustive surface — [references/api.md](references/api.md) and [references/chrome.md](references/chrome.md) carry the rest.
 
 ## Minimal deck
 
@@ -81,7 +83,7 @@ A strong deck has a factual outline, a timing budget, a narrative arc, a compres
 - **The dev server swallows runtime `public/` fetches.** `bun dev` SPA-fallbacks every unmatched path, so `<img src="/art/x.png">`, `fetch("/shots/a.json")`, and CSS `url(/fonts/x.woff2)` return the HTML page in dev while working fine in the bake. The verified ~15-line `dev.ts` fix is in [references/verification.md](references/verification.md).
 - **The bake inlines only literal asset paths.** `prezzer build` string-matches rooted paths against the built output; a runtime-constructed path like `` `/art/${id}.png` `` is never inlined and silently breaks offline. Keep asset paths literal.
 - **`<Beat>` wrappers are motion-transformed**, so they become the containing block for absolutely-positioned children. `bottom`-anchoring lands at the wrapper's flow position, not the slide bottom. Prefer flow layout inside beats.
-- **Hash routing is positional.** `#16` is the sixteenth slide, not outline id `S16`; when an outline skips numbers the two drift.
+- **Hash routing is positional and mixed-index.** `#16` is the sixteenth slide, not outline id `S16`, and the beat suffix is 0-indexed — `#4.2` is slide four with two reveals already fired.
 
 ## Verify before handing off
 

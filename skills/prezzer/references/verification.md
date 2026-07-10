@@ -23,14 +23,14 @@ Open `dist/index.html` from `file://` and drive:
 - every widget (space starts it, next space advances),
 - deny mode (`d`) on every slide that has a failure variant,
 - speaker notes (`n`) and the grid (`g`, click a card to jump),
-- a hash deep link (`#4.2`, refresh, confirm resume),
+- a hash deep link (`#4.2` — the beat suffix is 0-indexed, so that's slide four with two reveals fired; refresh, confirm resume),
 - **networking off once** — the artifact must present with zero network. If display fonts fall back to system type, that's the CDN-font tradeoff; see [theming.md](theming.md) to self-host.
 
 ## Browser screenshot pass
 
-Use a real browser at the target projector ratio (1920×1080). Screenshot at minimum: the title slide, the densest content slide, the grid overview, the notes overlay, deny mode, and each interactive demo's mid and final states. Navigate by loading `dist/index.html#N.B` URLs — positional hash beats simulating keypresses for reproducibility.
+Use a real browser at the target projector ratio (1920×1080). Screenshot at minimum: the title slide, the densest content slide, the grid overview, the notes overlay, deny mode, and each interactive demo's mid and final states. Navigate by loading `dist/index.html#N.B` URLs — positional hash beats simulating keypresses for reproducibility (remember the beat suffix `B` is 0-indexed).
 
-agent-browser operational notes: daemons share one socket across agents, so an orphaned Chrome wedges CDP for everyone — `pkill -9 -f ".agent-browser/browsers"` and relaunch. Run screenshot loops as one long-timeout foreground command, not many short ones.
+agent-browser operational notes: load the current agent-browser skill and follow its workflow rather than improvising — daemons can be shared across concurrent agents, so use an isolated session or daemon namespace of your own, diagnose a wedged browser with `agent-browser doctor` (destructive repair only via its explicit `--fix` path), and close only your own session when done. Run screenshot loops as one long-timeout foreground command, not many short ones.
 
 ## Gotcha: `bun dev` swallows runtime `public/` fetches
 
@@ -74,4 +74,4 @@ Retire this workaround when the engine ships a `prezzer dev` command.
 
 ## Gotcha: positional hashes drift from outline ids
 
-`#16` is the sixteenth slide, not outline id `S16`. When an outline skips numbers, position and id diverge — navigate and screenshot by position, and get the position from the grid or the notes header when unsure.
+`#16` is the sixteenth slide, not outline id `S16`. When an outline skips numbers, position and id diverge — navigate and screenshot by position, and get the position from the grid or the notes header when unsure. The beat suffix is 0-indexed on top of the 1-indexed slide (`#16.2` = the notes overlay's `beat 3/N`); see [api.md](api.md).

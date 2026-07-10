@@ -34,13 +34,13 @@ Notes render in the `n` overlay next to the slide id, deep marker, and beat posi
 
 You author against a 1920×1080 design canvas (override via `Deck`'s `designWidth`/`designHeight`) that scales uniformly to the viewport. Absolute pixel sizes are design pixels — `text-9xl` on the canvas is the same fraction of the screen everywhere. Consequences:
 
-- Design and verify at 16:9; other aspect ratios letterbox.
+- Design and verify at 16:9; other aspect ratios letterbox. The scale factor is clamped to 0.2–2.0 (not configurable through `Deck`), so extreme viewports can crop or leave slack instead of scaling further.
 - Don't use viewport units (`vw`/`vh`) inside slides; they bypass the scale and drift.
 - `h-full w-full` inside a slide refers to the canvas, which is what you want.
 
 ## Acts
 
-Acts color the progress rail and group the grid. Pass explicit `ActDef[]` when the talk has meaningful chapter names; derived acts (`act 0`, `act 1`, …) are fine for drafts. Act numbers don't need to be contiguous, but the rail reads best with 3–5 acts.
+Acts group the progress rail; the grid overview stays one flat registry-ordered list where acts supply the card colors and legend. Pass explicit `ActDef[]` when the talk has meaningful chapter names; derived acts (`act 0`, `act 1`, …) are fine for drafts. Act numbers don't need to be contiguous, but the rail reads best with 3–5 acts.
 
 ## File organization
 

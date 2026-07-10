@@ -31,7 +31,7 @@ Defaults below are what `resolveSlide` fills in; the engine always works with th
 | `id`         | `string`         | required  | Outline id, e.g. `"S9"` — stable across reorders; shown in notes and grid                       |
 | `title`      | `string`         | required  | Accessible label and grid card title                                                            |
 | `component`  | `ComponentType`  | required  | The slide itself                                                                                |
-| `act`        | `number`         | `0`       | Groups the progress rail and grid; matches an `ActDef.number`                                   |
+| `act`        | `number`         | `0`       | Groups the progress rail and colors the grid cards; matches an `ActDef.number`                  |
 | `beats`      | `number`         | `1`       | Total in-slide states **including the initial one**; `1` = no in-slide advance                  |
 | `transition` | `TransitionType` | `"morph"` | See [motion.md](motion.md) for the eight personalities                                          |
 | `notes`      | `string[]`       | `[]`      | Speaker notes for the `n` overlay                                                               |
@@ -67,22 +67,22 @@ The root also exports the shell's building blocks — `useKeyboardShortcuts`, `u
 
 ## Navigation model
 
-| Key                  | Action                                                                       |
-| -------------------- | ---------------------------------------------------------------------------- |
-| `space`, `→`, `pgdn` | Start the next pending widget, else next beat, else next slide               |
-| `←`, `pgup`          | Previous beat, else previous slide **landed fully revealed**                 |
-| `shift` + arrow      | Whole slide, skipping beats and widgets                                      |
-| `1`–`9`              | Jump straight to slides one through nine (grid is random access beyond that) |
-| `home`, `end`        | First or last slide                                                          |
-| `g` / `n` / `f`      | Grid overview / speaker notes / fullscreen                                   |
-| `d`                  | Deny mode; auto-resets on slide change                                       |
-| `a`                  | Fire the autoplay signal (increments `autoplaySignal`)                       |
-| `esc`                | Close grid, then notes, then exit fullscreen                                 |
+| Key                        | Action                                                                                         |
+| -------------------------- | ---------------------------------------------------------------------------------------------- |
+| `space`, `→`, `pgdn`       | Start the next pending widget, else next beat, else next slide                                 |
+| `←`, `pgup`                | Previous beat, else previous slide **landed fully revealed**                                   |
+| `shift` + advance/back key | Whole slide, skipping beats and widgets — applies to arrows, `space`, `pgup`, and `pgdn` alike |
+| `1`–`9`                    | Jump straight to slides one through nine (grid is random access beyond that)                   |
+| `home`, `end`              | First or last slide                                                                            |
+| `g` / `n` / `f`            | Grid overview / speaker notes / fullscreen                                                     |
+| `d`                        | Deny mode; auto-resets on slide change                                                         |
+| `a`                        | Fire the autoplay signal (increments `autoplaySignal`)                                         |
+| `esc`                      | Close grid, then notes, then exit fullscreen                                                   |
 
-Shortcuts are skipped when a modifier key is held or focus is inside `a`, `button`, `input`, `select`, `textarea`, or contenteditable — browser shortcuts and embedded interactive demos keep working. Page up/down means presenter clickers work unconfigured.
+Shortcuts are skipped when `meta`, `ctrl`, or `alt` is held (`shift` stays live — it upgrades advances to whole-slide jumps) or when the event target is inside the exact selector `a, button, input, select, textarea, [contenteditable="true"]` — browser shortcuts and embedded interactive demos keep working. The selector is literal: `contenteditable=""` or `"plaintext-only"` variants and custom focusable surfaces are **not** covered, so keep embedded demos on real interactive elements. Page up/down means presenter clickers work unconfigured.
 
-Touch shares the exact same ordering guarantees: horizontal swipes past 50px navigate, taps on the outer 20% screen edges step back/forward, and a center tap starts a pending widget before advancing. Taps must be under 300ms with less than 10px of movement, and touches starting on interactive elements are ignored.
+Touch shares the exact same ordering guarantees: horizontal swipes past 50px navigate, taps on the outer 20% screen edges step back/forward, and center taps advance. **Every forward gesture — left swipe, right-edge tap, center tap — starts a pending widget before it advances the deck**; backward gestures never do. Taps must be under 300ms with less than 10px of movement, and touches starting on interactive elements (same selector as above) are ignored.
 
 ## Hash deep links
 
-The URL hash mirrors position — `#4` is slide four, `#4.2` is slide four, beat two — so refresh resumes exactly where the presenter was, and editing the hash navigates. Numbers are 1-indexed **positional** slide numbers, clamped to the valid range; they are not outline ids, so when an outline skips numbers (`S15` → `S17`), position and id drift. Navigate by position.
+The URL hash mirrors position so refresh resumes exactly where the presenter was, and editing the hash navigates. Indexing is mixed: the slide number is **1-indexed positional**, the beat suffix is the **raw 0-indexed beat**. So `#4.2` is slide four with two reveals fired — beat index 2, which the notes overlay displays as `beat 3/N` — and beat zero canonicalizes to a bare `#4`. Both parts are clamped to valid ranges. Slide numbers are not outline ids: when an outline skips numbers (`S15` → `S17`), position and id drift. Navigate by position.

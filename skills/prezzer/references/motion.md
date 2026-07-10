@@ -1,6 +1,6 @@
 # Motion
 
-All motion runs on `motion` (Motion for React, a peer dependency). `Deck` wraps everything in `MotionConfig reducedMotion="user"`, so every transition and variant below respects `prefers-reduced-motion` for free — don't add manual reduced-motion branches.
+All motion runs on `motion` (Motion for React, a peer dependency). `Deck` wraps everything in `MotionConfig reducedMotion="user"`, which disables **transform and layout** animation for `prefers-reduced-motion` users — slide transitions and beat reveals degrade gracefully with no extra work. It does _not_ silence opacity, color, filter, or shadow animation, so looping ambience (`glowPulse`, `crtFlicker`) and any autoplaying flourish keep running; gate those yourself with `useReducedMotion()` from `motion/react` when the loop is more than a subtle shimmer.
 
 ```tsx
 import { motion } from "motion/react";
@@ -11,16 +11,16 @@ import { fadeInUp, springs, staggerContainer, staggerItem } from "prezzer"; // o
 
 Set per slide via `SlideDef.transition`. Default is `morph`.
 
-| Type     | Personality                                | Use for                       |
-| -------- | ------------------------------------------ | ----------------------------- |
-| `morph`  | Pure crossfade, elegant                    | The default; dense content    |
-| `slide`  | Standard horizontal, direction-aware       | Sequential narration          |
-| `zoom`   | Scale up from center, bright bloom         | Big reveals                   |
-| `portal` | Scale down + blur + saturation, 3D tilt    | Traveling into a new world    |
-| `glitch` | Instant clip-path cut with hue-shift flash | Failure modes, security beats |
-| `rise`   | Vertical from bottom                       | New sections / act openers    |
-| `spiral` | Rotation + scale, direction-aware          | Playful pivots                |
-| `split`  | Horizontal stretch from edges              | Dramatic contrast             |
+| Type     | Personality                                                | Use for                       |
+| -------- | ---------------------------------------------------------- | ----------------------------- |
+| `morph`  | Soft crossfade with a touch of scale, blur, and brightness | The default; dense content    |
+| `slide`  | Standard horizontal, direction-aware                       | Sequential narration          |
+| `zoom`   | Scale up from center, bright bloom                         | Big reveals                   |
+| `portal` | Scale down + blur + saturation, 3D tilt                    | Traveling into a new world    |
+| `glitch` | Instant clip-path cut with hue-shift flash                 | Failure modes, security beats |
+| `rise`   | Vertical from bottom                                       | New sections / act openers    |
+| `spiral` | Rotation + scale, direction-aware                          | Playful pivots                |
+| `split`  | Centered horizontal compression in, stretch out (`scaleX`) | Dramatic contrast             |
 
 All are spring-driven except `glitch` (0.25s tween) and `morph` (0.5s tween). Vary transitions by act or moment; a whole deck of `portal` reads as noise.
 

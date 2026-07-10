@@ -10,7 +10,7 @@ import {
 } from "prezzer/chrome";
 ```
 
-Two kinds of chrome. **Shell-owned** pieces render automatically — `SpeakerNotes` (`n`), `GridOverview` (`g`), `ProgressRail`, and the `RolloutBadge` stamped from `SlideDef.badge`. **Author-placed** pieces go inside slide components. All of them read the deck context, so they only work under `<Deck>` (or a manual `DeckProvider`).
+Two kinds of chrome. **Shell-owned** pieces render automatically — `SpeakerNotes` (`n`), `GridOverview` (`g`), `ProgressRail`, and the `RolloutBadge` stamped from `SlideDef.badge`. **Author-placed** pieces go inside slide components. All of them except `SlideArt` read the deck context, so they only work under `<Deck>` (or a manual `DeckProvider`); `SlideArt` is context-free and renders anywhere.
 
 Built-in chrome is plain CSS shipped by `prezzer/styles.css` — it never depends on the deck's styling system. Deck content is free to use Tailwind (the starter wires `bun-plugin-tailwind`), vanilla CSS, or anything else.
 
@@ -74,18 +74,18 @@ It is a **corner stamp** — absolutely positioned top-right of the canvas. For 
 <SlideArt src="/art/control-plane.png" scrim="left" opacity={0.9} />
 ```
 
-| Prop       | Type                                      | Default    | Notes                                                                                  |
-| ---------- | ----------------------------------------- | ---------- | -------------------------------------------------------------------------------------- |
-| `src`      | `string`                                  | required   | Rooted `public/` path; see the dev-server gotcha in [verification.md](verification.md) |
-| `position` | `string`                                  | `"center"` | CSS `object-position`                                                                  |
-| `opacity`  | `number`                                  | `1`        |                                                                                        |
-| `scrim`    | `"left" \| "right" \| "bottom" \| "none"` | `"none"`   | Dark gradient over one edge so slide text stays readable                               |
-| `fit`      | `"cover" \| "contain"`                    | `"cover"`  | `contain` keeps the whole illustration                                                 |
+| Prop       | Type                                      | Default    | Notes                                                                                                                                                         |
+| ---------- | ----------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src`      | `string`                                  | required   | Any image URL; a rooted `public/` path is the offline-safe convention (the bake inlines it) — see the dev-server gotcha in [verification.md](verification.md) |
+| `position` | `string`                                  | `"center"` | CSS `object-position`                                                                                                                                         |
+| `opacity`  | `number`                                  | `1`        |                                                                                                                                                               |
+| `scrim`    | `"left" \| "right" \| "bottom" \| "none"` | `"none"`   | Dark gradient over one edge so slide text stays readable                                                                                                      |
+| `fit`      | `"cover" \| "contain"`                    | `"cover"`  | `contain` keeps the whole illustration                                                                                                                        |
 
-Full-bleed art layer behind slide content with a slow Ken Burns drift. Put text opposite the scrim edge.
+Full-bleed art layer behind slide content with a slow Ken Burns drift. The scrim darkens the named edge to make text readable there — put text **on** the scrimmed edge and keep the image's subject opposite it.
 
 ## CSS class inventory
 
-Everything the engine styles uses the `prezzer-` prefix (plus the shell's `slide-viewport`, `slide-canvas`, `slide-container`, `scanlines`). Target these from deck CSS only to _extend_, never to rebuild what a prop already controls:
+Everything the engine styles uses the `prezzer-` prefix (plus the shell's `slide-viewport`, `slide-canvas`, `slide-canvas-wrapper`, `slide-container`, `scanlines`). Target these from deck CSS only to _extend_, never to rebuild what a prop already controls:
 
 `prezzer-creed-chip` · `prezzer-deny-badge` · `prezzer-empty-deck` · `prezzer-grid-card` (`-badge`, `-meta`, `-title`) · `prezzer-grid-hint` · `prezzer-grid-legend` (`-item`) · `prezzer-grid-list` · `prezzer-grid-overview` · `prezzer-grid-panel` · `prezzer-progress` (`-act`, `-dot`, `-dots`, `-label`, `-readout`) · `prezzer-rollout-badge` · `prezzer-slide-art` (`-edge`, `-image`, `-scrim`) · `prezzer-slide-creeds` · `prezzer-slide-eyebrow` · `prezzer-slide-header` (`-copy`) · `prezzer-slide-tag` · `prezzer-slide-title` · `prezzer-speaker-note` · `prezzer-speaker-notes` (`-header`, `-hint`, `-list`) · `prezzer-sr-only` · `prezzer-star` · `prezzer-starfield` · `prezzer-stat` (`-label`, `-rail`, `-value`)

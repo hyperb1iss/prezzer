@@ -40,7 +40,7 @@ The generated repository is the contract: `index.html` is the entry, `src/main.t
 | `prezzer/styles.css`              | The shell and chrome styles; import once in the entry                                                                                      |
 | `prezzer/bun-plugin`              | Keeps linked local dev on one React/Motion instance                                                                                        |
 
-The table lists the working set, not the exhaustive surface — [references/api.md](references/api.md) and [references/chrome.md](references/chrome.md) carry the rest.
+The table and the references are curated working sets, not exhaustive export inventories — [references/api.md](references/api.md) and [references/chrome.md](references/chrome.md) go deeper, and `packages/engine/src` is the final word.
 
 ## Minimal deck
 

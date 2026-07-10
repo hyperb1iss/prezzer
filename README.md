@@ -35,6 +35,7 @@
 
 <p align="center">
   <a href="#-quick-start">Quick Start</a> •
+  <a href="#-agent-fast-path">Agents</a> •
   <a href="#-slides-are-components">Slides as Code</a> •
   <a href="#-present-like-you-mean-it">Presenting</a> •
   <a href="#-one-file-fully-offline">The Artifact</a> •
@@ -79,6 +80,16 @@ bun run build
 ```
 
 `dist/index.html` contains the complete presentation — open it from `file://`, attach it to an email, or put it on any static host.
+
+## 🤖 Agent Fast Path
+
+Building with Claude Code or another coding agent? One command teaches it the whole system — the authoring workflow, the full API reference, and the gotchas we hit so your agent doesn't have to:
+
+```bash
+npx skills add hyperb1iss/prezzer
+```
+
+No installer handy? Paste [skills/prezzer/SKILL.md](skills/prezzer/SKILL.md) at your agent — it links everything else it needs.
 
 ## 🎬 Slides Are Components
 

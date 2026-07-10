@@ -1,0 +1,251 @@
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
+import { silkCircuit, type Theme } from '../theme/tokens'
+import { type ActDef, type ResolvedSlideDef, resolveSlide, type SlideDef } from '../types'
+
+interface NavState {
+  slideIndex: number
+  beat: number
+  direction: number
+}
+
+interface DeckContextValue extends NavState {
+  slides: readonly ResolvedSlideDef[]
+  acts: readonly ActDef[]
+  theme: Theme
+  totalSlides: number
+  denyMode: boolean
+  autoplaySignal: number
+  next: () => void
+  prev: () => void
+  nextSlide: () => void
+  prevSlide: () => void
+  goToSlide: (index: number) => void
+  toggleDeny: () => void
+  fireAutoplay: () => void
+}
+
+const DeckContext = createContext<DeckContextValue | null>(null)
+
+function parseHash(slides: readonly ResolvedSlideDef[]): NavState {
+  if (typeof window === 'undefined' || slides.length === 0) {
+    return { slideIndex: 0, beat: 0, direction: 0 }
+  }
+  const match = /^(\d+)(?:\.(\d+))?$/.exec(window.location.hash.slice(1))
+  if (!match?.[1]) return { slideIndex: 0, beat: 0, direction: 0 }
+  const slideIndex = Math.min(Math.max(Number.parseInt(match[1], 10) - 1, 0), slides.length - 1)
+  const maxBeat = (slides[slideIndex]?.beats ?? 1) - 1
+  const beat = match[2] ? Math.min(Number.parseInt(match[2], 10), maxBeat) : 0
+  return { slideIndex, beat, direction: 0 }
+}
+
+function formatHash({ slideIndex, beat }: NavState): string {
+  return beat > 0 ? `${slideIndex + 1}.${beat}` : `${slideIndex + 1}`
+}
+
+function deriveActs(slides: readonly ResolvedSlideDef[], theme: Theme): ActDef[] {
+  const palette = [
+    theme.colors.electricPurple,
+    theme.colors.neonCyan,
+    theme.colors.coral,
+    theme.colors.electricYellow,
+    theme.colors.successGreen,
+    theme.colors.errorRed,
+  ]
+  const numbers = [...new Set(slides.map((slide) => slide.act))].sort((a, b) => a - b)
+  return numbers.map((number, index) => ({
+    number,
+    title: `act ${number}`,
+    color: palette[index % palette.length] ?? theme.colors.electricPurple,
+  }))
+}
+
+export interface DeckProviderProps {
+  slides: readonly SlideDef[]
+  /** Act labels/colors for the rail and grid; derived from slides when omitted */
+  acts?: readonly ActDef[]
+  theme?: Theme
+  children: ReactNode
+}
+
+export function DeckProvider({
+  slides: defs,
+  acts,
+  theme = silkCircuit,
+  children,
+}: DeckProviderProps) {
+  const slides = useMemo(() => defs.map(resolveSlide), [defs])
+  const resolvedActs = useMemo(() => acts ?? deriveActs(slides, theme), [acts, slides, theme])
+
+  const [nav, setNav] = useState<NavState>(() => parseHash(slides))
+  const [denyMode, setDenyMode] = useState(false)
+  const [autoplaySignal, setAutoplaySignal] = useState(0)
+
+  // URL hash mirrors position so refresh resumes mid-deck
+  useEffect(() => {
+    if (slides.length === 0) return
+    const hash = formatHash(nav)
+    if (window.location.hash.slice(1) !== hash) {
+      window.location.hash = hash
+    }
+  }, [nav, slides.length])
+
+  useEffect(() => {
+    setNav((current) => {
+      if (slides.length === 0) {
+        return current.slideIndex === 0 && current.beat === 0
+          ? current
+          : { slideIndex: 0, beat: 0, direction: -1 }
+      }
+
+      const slideIndex = Math.min(current.slideIndex, slides.length - 1)
+      const beat = Math.min(current.beat, (slides[slideIndex]?.beats ?? 1) - 1)
+      return slideIndex === current.slideIndex && beat === current.beat
+        ? current
+        : { slideIndex, beat, direction: -1 }
+    })
+  }, [slides])
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      setNav((prev) => {
+        const parsed = parseHash(slides)
+        if (parsed.slideIndex === prev.slideIndex && parsed.beat === prev.beat) return prev
+        return { ...parsed, direction: parsed.slideIndex >= prev.slideIndex ? 1 : -1 }
+      })
+    }
+    window.addEventListener('hashchange', handleHashChange)
+    return () => window.removeEventListener('hashchange', handleHashChange)
+  }, [slides])
+
+  // Deny-variant is a per-slide mode
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset keyed on slide change
+  useEffect(() => {
+    setDenyMode(false)
+  }, [nav.slideIndex])
+
+  const next = useCallback(() => {
+    setNav((prev) => {
+      const def = slides[prev.slideIndex]
+      if (def && prev.beat < def.beats - 1) {
+        return { ...prev, beat: prev.beat + 1, direction: 1 }
+      }
+      if (prev.slideIndex < slides.length - 1) {
+        return { slideIndex: prev.slideIndex + 1, beat: 0, direction: 1 }
+      }
+      return prev
+    })
+  }, [slides])
+
+  const prev = useCallback(() => {
+    setNav((current) => {
+      if (current.beat > 0) {
+        return { ...current, beat: current.beat - 1, direction: -1 }
+      }
+      if (current.slideIndex > 0) {
+        const target = current.slideIndex - 1
+        // Land on the previous slide fully revealed
+        return { slideIndex: target, beat: (slides[target]?.beats ?? 1) - 1, direction: -1 }
+      }
+      return current
+    })
+  }, [slides])
+
+  const goToSlide = useCallback(
+    (index: number) => {
+      if (slides.length === 0) return
+      const clamped = Math.max(0, Math.min(index, slides.length - 1))
+      setNav((current) => ({
+        slideIndex: clamped,
+        beat: 0,
+        direction: clamped >= current.slideIndex ? 1 : -1,
+      }))
+    },
+    [slides]
+  )
+
+  const nextSlide = useCallback(() => {
+    setNav((current) =>
+      current.slideIndex < slides.length - 1
+        ? { slideIndex: current.slideIndex + 1, beat: 0, direction: 1 }
+        : current
+    )
+  }, [slides])
+
+  const prevSlide = useCallback(() => {
+    setNav((current) =>
+      current.slideIndex > 0
+        ? { slideIndex: current.slideIndex - 1, beat: 0, direction: -1 }
+        : current
+    )
+  }, [])
+
+  const toggleDeny = useCallback(() => setDenyMode((current) => !current), [])
+  const fireAutoplay = useCallback(() => setAutoplaySignal((current) => current + 1), [])
+
+  const value = useMemo<DeckContextValue>(
+    () => ({
+      ...nav,
+      slides,
+      acts: resolvedActs,
+      theme,
+      totalSlides: slides.length,
+      denyMode,
+      autoplaySignal,
+      next,
+      prev,
+      nextSlide,
+      prevSlide,
+      goToSlide,
+      toggleDeny,
+      fireAutoplay,
+    }),
+    [
+      nav,
+      slides,
+      resolvedActs,
+      theme,
+      denyMode,
+      autoplaySignal,
+      next,
+      prev,
+      nextSlide,
+      prevSlide,
+      goToSlide,
+      toggleDeny,
+      fireAutoplay,
+    ]
+  )
+
+  return <DeckContext.Provider value={value}>{children}</DeckContext.Provider>
+}
+
+export function useDeck(): DeckContextValue {
+  const context = useContext(DeckContext)
+  if (!context) {
+    throw new Error('useDeck must be used within a DeckProvider')
+  }
+  return context
+}
+
+/** Current in-slide beat (0-indexed) */
+export function useBeat(): number {
+  return useDeck().beat
+}
+
+/** Whether the `d` deny-variant is active on the current slide */
+export function useDenyMode(): boolean {
+  return useDeck().denyMode
+}
+
+/** The active theme, as provided to DeckProvider */
+export function useDeckTheme(): Theme {
+  return useDeck().theme
+}

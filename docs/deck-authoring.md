@@ -1,0 +1,92 @@
+# Deck authoring
+
+## Create the repository
+
+```bash
+bun create prezzer my-talk
+cd my-talk
+bun dev
+```
+
+The generated repository has one source of truth for the deck in `src/slides.tsx`. Split slides into individual files when the talk grows beyond a handful of components.
+
+## Define slides and acts
+
+`SlideDef` is the deck registry:
+
+```tsx
+const slides: SlideDef[] = [
+  {
+    id: "S4",
+    title: "the control plane",
+    act: 2,
+    beats: 3,
+    transition: "rise",
+    notes: [
+      "start with the user action",
+      "then reveal the reconciliation loop",
+    ],
+    deep: true,
+    badge: "IN FLIGHT",
+    component: ControlPlane,
+  },
+];
+```
+
+- `id` stays stable when slides are reordered.
+- `beats` includes the initial state. A three-beat slide accepts two in-slide advances before moving on.
+- `notes` appear in the presenter overlay.
+- `deep` marks a slide that can be compressed when time is short.
+- `badge` displays an honest delivery status.
+
+Acts group the progress rail and grid overview. Pass explicit `ActDef[]` values when the talk needs meaningful labels and colors; otherwise Prezzer derives them from slide act numbers.
+
+## Reveal with beats
+
+```tsx
+function Architecture() {
+  const beat = useBeat();
+  return (
+    <section>
+      <Diagram stage={beat} />
+      <Beat at={1}>the worker claims the job</Beat>
+      <Beat at={2}>the result closes the loop</Beat>
+    </section>
+  );
+}
+```
+
+`<Beat at={n}>` handles a standard reveal. `useBeat()` is better for diagrams, counters, timelines, and any scene whose whole state changes together. The current position is mirrored into the URL hash, so `#4.2` returns directly to slide four, beat two.
+
+## Add imperative widgets
+
+Self-timed demos can claim the next advance before the deck moves on. Implement `DeckWidgetHandle`, register the ref with `useWidgetRegistration()`, and report whether the widget already started. Keyboard and touch advances use the same widget ordering.
+
+## Theme the deck
+
+Prezzer ships SilkCircuit by default. Override only what the talk needs:
+
+```tsx
+import { createTheme, Deck } from 'prezzer'
+
+const theme = createTheme({
+  colors: {
+    electricPurple: '#b14cff',
+    background: '#08060f',
+  },
+})
+
+<Deck slides={slides} theme={theme} />
+```
+
+Components read the active theme through `useDeckTheme()`. The shell also exposes every token as a `--prezzer-*` custom property for CSS.
+
+## Verify what gets presented
+
+```bash
+bun run check
+bun run build
+open dist/index.html
+```
+
+The final file is the product. Drive every slide, beat, widget, note, grid entry, and failure mode from the built file. Turn the network off once and confirm the talk still works before sharing it.

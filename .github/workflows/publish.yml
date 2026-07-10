@@ -1,0 +1,29 @@
+name: Publish
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Validate package contents without publishing
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    uses: hyperb1iss/shared-workflows/.github/workflows/npm-publish.yml@852545007ba5e63edb14230e5f0d564191c42f98
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      bun-version: "1.3.14"
+      checkout-ref: ${{ github.event.release.tag_name || github.ref }}
+      package-dirs: |
+        packages/engine
+        packages/create-prezzer
+      dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run || false }}

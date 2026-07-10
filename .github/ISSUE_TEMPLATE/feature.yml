@@ -1,0 +1,23 @@
+name: Feature request
+description: Propose a reusable presentation primitive or workflow improvement
+title: "feat: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: friction
+    attributes:
+      label: What is hard today?
+      description: Describe the authoring or presenting friction, not only the desired API.
+    validations:
+      required: true
+  - type: textarea
+    id: shape
+    attributes:
+      label: What would good look like?
+    validations:
+      required: true
+  - type: textarea
+    id: decks
+    attributes:
+      label: Where has this appeared?
+      description: Link decks or examples that show the pattern is reusable.

@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+@theme {
+	--font-display: "Clash Display", system-ui, sans-serif;
+	--font-body: "Satoshi", system-ui, sans-serif;
+	--font-mono: "Geist Mono", ui-monospace, monospace;
+}

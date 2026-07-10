@@ -1,0 +1,47 @@
+{
+  "name": "create-prezzer",
+  "version": "0.1.0",
+  "description": "Create a Bun-native Prezzer deck",
+  "license": "MIT",
+  "author": "Stefanie Jane <stef@hyperbliss.tech>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hyperb1iss/prezzer",
+    "directory": "packages/create-prezzer"
+  },
+  "type": "module",
+  "bin": {
+    "create-prezzer": "./src/index.ts"
+  },
+  "files": [
+    "src/index.ts",
+    "template",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "bun run typecheck",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "engines": {
+    "bun": ">=1.3.14"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.14",
+    "typescript": "^7.0.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "presentations",
+    "slides",
+    "react",
+    "bun",
+    "scaffold"
+  ],
+  "bugs": {
+    "url": "https://github.com/hyperb1iss/prezzer/issues"
+  },
+  "homepage": "https://github.com/hyperb1iss/prezzer#readme"
+}

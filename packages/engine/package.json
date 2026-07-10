@@ -1,0 +1,85 @@
+{
+  "name": "prezzer",
+  "version": "0.1.0",
+  "description": "Interactive presentations with beat-driven slides, real React, and decks you own",
+  "license": "MIT",
+  "author": "Stefanie Jane <stef@hyperbliss.tech>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hyperb1iss/prezzer",
+    "directory": "packages/engine"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "prezzer": "./bin/prezzer.ts"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./chrome": {
+      "types": "./dist/chrome/index.d.ts",
+      "default": "./dist/chrome/index.js"
+    },
+    "./widgets": {
+      "types": "./dist/widgets/registry.d.ts",
+      "default": "./dist/widgets/registry.js"
+    },
+    "./theme": {
+      "types": "./dist/theme/tokens.d.ts",
+      "default": "./dist/theme/tokens.js"
+    },
+    "./motion": {
+      "types": "./dist/motion/animations.d.ts",
+      "default": "./dist/motion/animations.js"
+    },
+    "./styles.css": "./dist/styles.css"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "*.css"
+  ],
+  "scripts": {
+    "build": "NODE_ENV=production bun run build.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "bun test"
+  },
+  "peerDependencies": {
+    "motion": ">=12.0.0",
+    "react": ">=19.0.0",
+    "react-dom": ">=19.0.0"
+  },
+  "dependencies": {
+    "bun-plugin-tailwind": "^0.1.2"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "motion": "^12.42.2",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "typescript": "^7.0.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "presentations",
+    "slides",
+    "react",
+    "bun",
+    "interactive"
+  ],
+  "bugs": {
+    "url": "https://github.com/hyperb1iss/prezzer/issues"
+  },
+  "homepage": "https://github.com/hyperb1iss/prezzer#readme"
+}

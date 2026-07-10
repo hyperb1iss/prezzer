@@ -1,0 +1,39 @@
+name: Bug report
+description: Report a reproducible problem in the engine, CLI, or starter
+title: "bug: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for helping make Prezzer sharper.
+  - type: input
+    id: version
+    attributes:
+      label: Prezzer and Bun versions
+      placeholder: prezzer 0.1.0, Bun 1.3.14
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Include the smallest deck or repository that shows the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, browser, and any relevant projector or touch setup.

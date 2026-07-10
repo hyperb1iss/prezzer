@@ -3,6 +3,6 @@
   "compilerOptions": {
     "jsx": "react-jsx"
   },
-  "include": ["src/**/*", "bin/**/*.ts", "build.ts"],
+  "include": ["src/**/*", "bin/**/*.ts", "build.ts", "bun-plugin.ts"],
   "exclude": ["dist"]
 }

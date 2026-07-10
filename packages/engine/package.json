@@ -36,11 +36,13 @@
       "types": "./dist/motion/animations.d.ts",
       "default": "./dist/motion/animations.js"
     },
-    "./styles.css": "./dist/styles.css"
+    "./styles.css": "./dist/styles.css",
+    "./bun-plugin": "./bun-plugin.ts"
   },
   "files": [
     "dist",
     "bin",
+    "bun-plugin.ts",
     "README.md",
     "LICENSE"
   ],

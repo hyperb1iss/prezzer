@@ -34,6 +34,7 @@ export function App() {
 - `prezzer/widgets` exports the imperative widget registry.
 - `prezzer/theme` and `prezzer/motion` provide focused imports.
 - `prezzer/styles.css` contains the framework-free shell and chrome styles.
+- `prezzer/bun-plugin` keeps linked decks on one React and Motion instance during local development.
 
 ## Build CLI
 

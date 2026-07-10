@@ -3,6 +3,7 @@
 import tailwind from 'bun-plugin-tailwind'
 import { mkdir, rm } from 'node:fs/promises'
 import { basename, resolve } from 'node:path'
+import prezzerPlugin from '../bun-plugin'
 
 const purple = '\x1b[38;2;225;53;255m'
 const cyan = '\x1b[38;2;128;255;234m'
@@ -63,7 +64,7 @@ async function build(args: string[]) {
     target: 'browser',
     compile: true,
     minify,
-    plugins: [tailwind],
+    plugins: [prezzerPlugin, tailwind],
   })
 
   if (!result.success) {

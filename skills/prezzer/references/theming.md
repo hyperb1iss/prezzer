@@ -71,4 +71,4 @@ For typography that survives with zero network: download the `woff2` files into 
 }
 ```
 
-`prezzer build` inlines every referenced `public/` asset as a data URI, fonts included. Note that rooted font URLs in CSS hit the dev-server gotcha — they resolve in the bake but not under `bun dev` without the fix in [verification.md](verification.md).
+`prezzer build` inlines every referenced `public/` asset as a data URI, fonts included. Rooted font URLs resolve in the bake and under `prezzer dev`; serving the entry directly with `bun index.html` swallows them — see [verification.md](verification.md).

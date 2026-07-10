@@ -69,7 +69,7 @@ cd my-talk
 bun dev
 ```
 
-That is the entire development setup. Bun serves the HTML entry, hot reloads React and TypeScript, and runs Tailwind through its native plugin.
+That is the entire development setup. `bun dev` runs the Prezzer dev server — hot reload for React and TypeScript, Tailwind through Bun's native plugin, and `public/` assets served exactly as the build inlines them.
 
 When the deck is ready:
 

@@ -13,6 +13,8 @@ Run the narrow gate while editing; run both before handing off.
 
 ## CLI
 
+`prezzer dev [entry] [--port <n>]` — hot-reload dev server that also serves `public/` (the starter's `bun dev` script runs this).
+
 `prezzer build [entry] [--outdir <dir>] [--no-minify]` — defaults `index.html` and `dist`. `--outdir` must be inside the project and can't contain the entry. Use `--no-minify` when diagnosing what landed in the artifact.
 
 ## The built-file pass
@@ -32,7 +34,7 @@ Use a real browser at the target projector ratio (1920×1080). Screenshot at min
 
 agent-browser operational notes: load the current agent-browser skill and follow its workflow rather than improvising — daemons can be shared across concurrent agents, so use an isolated session or daemon namespace of your own, diagnose a wedged browser with `agent-browser doctor` (destructive repair only via its explicit `--fix` path), and close only your own session when done. Run screenshot loops as one long-timeout foreground command, not many short ones.
 
-## Gotcha: `bun dev` swallows runtime `public/` fetches
+## Gotcha: plain `bun index.html` swallows runtime `public/` fetches
 
 **Symptom:** images, fetched JSON, or CSS-referenced fonts under `public/` render broken in dev but work in the built file. `curl` shows the tell — the request returns the page:
 
@@ -41,9 +43,11 @@ $ curl -sI http://localhost:3000/art/x.png | grep -i content-type
 content-type: text/html;charset=utf-8
 ```
 
-**Cause:** `bun dev` (`bun index.html`) SPA-fallbacks every unmatched path to the page, and the engine's public-assets handling only covers bundler-time resolution (imports, inlining at bake). Runtime HTTP requests for rooted paths have no `public/` convention.
+**Cause:** serving the entry directly (`bun index.html`) SPA-fallbacks every unmatched path to the page, and the engine's bundler plugin only covers bundler-time resolution (imports, inlining at bake). Runtime HTTP requests for rooted paths have no `public/` convention there.
 
-**Fix** (verified against prezzer 0.1.0, Bun 1.3.14 — serves the app with HMR, returns `public/` assets with correct MIME types, 404s real misses): add `dev.ts` and run `bun dev.ts` instead of `bun index.html`; the `bunfig.toml` serve plugins still apply to the imported HTML.
+**Fix:** serve with `prezzer dev` — the starter's `bun dev` script already does. It wraps the same HTML entry in `Bun.serve` with hot reload and resolves unmatched paths against `public/` with a traversal guard (verified on Bun 1.3.14: app and HMR chunks serve, assets return correct MIME types, misses and `..` traversal 404).
+
+On prezzer 0.1.0, which predates the dev command, add this verified `dev.ts` and run `bun dev.ts` instead; the `bunfig.toml` serve plugins still apply to the imported HTML:
 
 ```ts
 import index from "./index.html";
@@ -62,7 +66,7 @@ const server = Bun.serve({
 console.log(`prezzer dev → ${server.url}`);
 ```
 
-Retire this workaround when the engine ships a `prezzer dev` command.
+Retire the fallback once the deck is on a release that ships `prezzer dev`.
 
 ## Gotcha: the bake inlines only literal asset paths
 

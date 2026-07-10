@@ -18,7 +18,7 @@
   },
   "license": "MIT",
   "scripts": {
-    "dev": "bun --cwd examples/hello index.html",
+    "dev": "bun run --cwd examples/hello dev",
     "build": "bun run build:packages && bun run build:examples",
     "build:packages": "bun run --filter './packages/*' build",
     "build:examples": "bun run --filter './examples/*' build",

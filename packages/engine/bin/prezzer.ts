@@ -20,16 +20,21 @@ function printHelp() {
   console.log(`${purple}prezzer${reset} ${muted}build cinematic decks with Bun${reset}
 
 ${cyan}Usage${reset}
-  prezzer build [entry] [options]
+  prezzer <command> [entry] [options]
 
 ${cyan}Commands${reset}
+  dev      serve the deck with hot reload and public/ assets
   build    bake one self-contained HTML file
 
 ${cyan}Options${reset}
-  --outdir <dir>   output directory ${muted}(default: dist)${reset}
-  --no-minify      keep readable output while diagnosing builds
+  dev
+    --port <number>  port to listen on ${muted}(default: $PORT or 3000)${reset}
+  build
+    --outdir <dir>   output directory ${muted}(default: dist)${reset}
+    --no-minify      keep readable output while diagnosing builds
 
 ${cyan}Examples${reset}
+  prezzer dev
   prezzer build
   prezzer build talk.html --outdir release`)
 }
@@ -120,6 +125,58 @@ async function canonicalize(path: string): Promise<string> {
 
     throw error
   }
+}
+
+async function dev(args: string[]) {
+  let entry = 'index.html'
+  let port: number | undefined
+  let entrySet = false
+
+  for (let index = 0; index < args.length; index += 1) {
+    const argument = args[index]
+    if (argument === '--port') {
+      const value = Number(args[index + 1])
+      if (!Number.isInteger(value) || value <= 0) fail('--port needs a positive number')
+      port = value
+      index += 1
+    } else if (argument?.startsWith('-')) {
+      fail(`unknown option: ${argument}`)
+    } else if (!entrySet && argument) {
+      entry = argument
+      entrySet = true
+    } else if (argument) {
+      fail(`unexpected argument: ${argument}`)
+    }
+  }
+
+  const entryPath = resolve(entry)
+  if (!(await Bun.file(entryPath).exists())) fail(`entry not found: ${entry}`)
+  const { default: index } = await import(entryPath)
+
+  const publicRoot = resolve('public')
+  const server = Bun.serve({
+    port,
+    routes: { '/': index },
+    development: { hmr: true, console: true },
+    async fetch(request) {
+      let pathname: string
+      try {
+        pathname = decodeURIComponent(new URL(request.url).pathname)
+      } catch {
+        return new Response('bad request', { status: 400 })
+      }
+      const assetPath = resolve(publicRoot, pathname.slice(1))
+      if (isWithin(publicRoot, assetPath)) {
+        const asset = Bun.file(assetPath)
+        if (await asset.exists()) return new Response(asset)
+      }
+      return new Response('not found', { status: 404 })
+    },
+  })
+
+  console.log(
+    `${purple}prezzer${reset} ${muted}dev${reset} ${cyan}${entry}${reset} ${muted}→${reset} ${cyan}${server.url}${reset} ${muted}· hot reload on · public/ served${reset}`
+  )
 }
 
 async function build(args: string[]) {
@@ -213,6 +270,8 @@ const [command, ...args] = Bun.argv.slice(2)
 
 if (!command || command === 'help' || command === '--help' || command === '-h') {
   printHelp()
+} else if (command === 'dev') {
+  await dev(args)
 } else if (command === 'build') {
   await build(args)
 } else {

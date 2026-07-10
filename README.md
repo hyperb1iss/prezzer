@@ -55,7 +55,7 @@ A Prezzer deck is real software. It lives in its own repository, renders with re
 - 📦 **One-file offline artifact** — `prezzer build` bakes markup, styles, scripts, images, and self-hosted fonts into a single HTML file
 - 🎭 **Presenter chrome built in** — speaker notes, grid overview, act-aware progress rail, and honest rollout badges
 - 💫 **Eight slide transitions** — `portal`, `glitch`, `zoom`, `rise`, `spiral`, `morph`, `split`, and `slide`, chosen per slide
-- 🔗 **Hash deep links** — `#4.2` reopens the deck at slide four, beat two; refresh resumes exactly where you were
+- 🔗 **Hash deep links** — `#4.2` reopens slide four mid-reveal; refresh resumes exactly where you were
 - 🧨 **Deny mode** — every slide gets a free failure-path variant, made for live security demos
 - 🖱️ **Keyboard, touch, and widgets** — all three advance through the same ordering guarantees, and self-timed demos can claim the spacebar before the deck moves
 - 🌌 **SilkCircuit theme** — electric purple and neon cyan out of the box, fully overridable through design tokens

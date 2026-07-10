@@ -39,7 +39,7 @@ const slides: SlideDef[] = [
 - `deep` marks a slide that can be compressed when time is short.
 - `badge` displays an honest delivery status.
 
-Acts group the progress rail and grid overview. Pass explicit `ActDef[]` values when the talk needs meaningful labels and colors; otherwise Prezzer derives them from slide act numbers.
+Acts group the progress rail and color the grid overview's cards and legend. Pass explicit `ActDef[]` values when the talk needs meaningful labels and colors; otherwise Prezzer derives them from slide act numbers.
 
 ## Reveal with beats
 
@@ -56,7 +56,7 @@ function Architecture() {
 }
 ```
 
-`<Beat at={n}>` handles a standard reveal. `useBeat()` is better for diagrams, counters, timelines, and any scene whose whole state changes together. The current position is mirrored into the URL hash, so `#4.2` returns directly to slide four, beat two.
+`<Beat at={n}>` handles a standard reveal. `useBeat()` is better for diagrams, counters, timelines, and any scene whose whole state changes together. The current position is mirrored into the URL hash, so refresh resumes exactly where you were; the beat suffix is the 0-indexed beat, so `#4.2` is slide four with two reveals fired.
 
 ## Add imperative widgets
 

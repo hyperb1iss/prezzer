@@ -2,8 +2,9 @@
 
 import tailwind from 'bun-plugin-tailwind'
 import type { BunPlugin } from 'bun'
-import { mkdir, readdir, rm } from 'node:fs/promises'
-import { basename, relative, resolve } from 'node:path'
+import { lstat, mkdir, mkdtemp, readdir, realpath, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { basename, dirname, isAbsolute, relative, resolve, sep } from 'node:path'
 import prezzerPlugin from '../bun-plugin'
 
 const purple = '\x1b[38;2;225;53;255m'
@@ -80,6 +81,31 @@ async function inlinePublicAssets(html: string): Promise<string> {
   return html
 }
 
+function isWithin(parent: string, child: string) {
+  const path = relative(parent, child)
+  return path !== '' && path !== '..' && !path.startsWith(`..${sep}`) && !isAbsolute(path)
+}
+
+async function canonicalize(path: string): Promise<string> {
+  try {
+    return await realpath(path)
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
+
+    try {
+      await lstat(path)
+    } catch (lstatError) {
+      if ((lstatError as NodeJS.ErrnoException).code !== 'ENOENT') throw lstatError
+
+      const parent = dirname(path)
+      if (parent === path) throw error
+      return resolve(await canonicalize(parent), basename(path))
+    }
+
+    throw error
+  }
+}
+
 async function build(args: string[]) {
   let entry = 'index.html'
   let outdir = 'dist'
@@ -103,34 +129,62 @@ async function build(args: string[]) {
     }
   }
 
-  if (!(await Bun.file(entry).exists())) fail(`entry not found: ${entry}`)
+  const projectRoot = await realpath('.')
+  const entryPath = resolve(entry)
+  const outputDirectory = resolve(outdir)
 
-  const outputPath = resolve(outdir, basename(entry))
-  await rm(outdir, { recursive: true, force: true })
-
-  const result = await Bun.build({
-    entrypoints: [entry],
-    outdir,
-    target: 'browser',
-    compile: true,
-    minify,
-    plugins: [publicAssetsPlugin, prezzerPlugin, tailwind],
-  })
-
-  if (!result.success) {
-    for (const log of result.logs) console.error(log)
-    process.exit(1)
+  if (!(await Bun.file(entryPath).exists())) fail(`entry not found: ${entry}`)
+  const canonicalEntry = await realpath(entryPath)
+  const canonicalOutputDirectory = await canonicalize(outputDirectory)
+  if (!isWithin(projectRoot, canonicalOutputDirectory)) {
+    fail('--outdir must be a directory inside the project')
+  }
+  if (
+    isWithin(canonicalOutputDirectory, canonicalEntry) ||
+    canonicalOutputDirectory === canonicalEntry
+  ) {
+    fail('--outdir cannot contain the deck entry')
   }
 
-  const standalone = result.outputs.find((output) => output.path === outputPath)
-  if (!standalone) fail('Bun did not emit the standalone deck')
+  const outputPath = resolve(outputDirectory, basename(entryPath))
+  const canonicalOutputPath = await canonicalize(outputPath)
+  if (
+    !isWithin(canonicalOutputDirectory, canonicalOutputPath) ||
+    canonicalOutputPath === canonicalEntry
+  ) {
+    fail('--outdir cannot overwrite files outside the output directory')
+  }
+  const stagingDirectory = await mkdtemp(resolve(tmpdir(), 'prezzer-build-'))
 
-  const html = await inlinePublicAssets(await standalone.text())
-  await rm(outdir, { recursive: true, force: true })
-  await mkdir(outdir, { recursive: true })
-  await Bun.write(outputPath, html)
+  try {
+    const result = await Bun.build({
+      entrypoints: [entryPath],
+      outdir: stagingDirectory,
+      target: 'browser',
+      compile: true,
+      minify,
+      define: { 'process.env.NODE_ENV': JSON.stringify('production') },
+      plugins: [publicAssetsPlugin, prezzerPlugin, tailwind],
+    })
 
-  console.log(`${purple}prezzer${reset} built ${cyan}${outputPath}${reset}`)
+    if (!result.success) {
+      for (const log of result.logs) console.error(log)
+      process.exitCode = 1
+      return
+    }
+
+    const stagedOutputPath = resolve(stagingDirectory, basename(entryPath))
+    const standalone = result.outputs.find((output) => output.path === stagedOutputPath)
+    if (!standalone) fail('Bun did not emit the standalone deck')
+
+    const html = await inlinePublicAssets(await standalone.text())
+    await mkdir(outputDirectory, { recursive: true })
+    await Bun.write(outputPath, html)
+
+    console.log(`${purple}prezzer${reset} built ${cyan}${outputPath}${reset}`)
+  } finally {
+    await rm(stagingDirectory, { recursive: true, force: true })
+  }
 }
 
 const [command, ...args] = Bun.argv.slice(2)

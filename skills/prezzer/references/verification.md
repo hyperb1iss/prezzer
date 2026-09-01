@@ -13,9 +13,9 @@ Run the narrow gate while editing; run both before handing off.
 
 ## CLI
 
-`prezzer dev [entry] [--port <n>] [--host <name>]` — hot-reload dev server that also serves `public/`, on `127.0.0.1:1609` by default (1609 because 16:9; `--port` beats `$PORT` beats the default, `--host` exposes beyond loopback). The starter's `bun dev` script runs this.
+`prezzer dev [entry] [--port <n>] [--host <name>]` — hot-reload dev server that also serves `public/`, on `127.0.0.1:1609` by default (1609 because 16:9; `--port` beats `$BUN_PORT`/`$PORT`/`$NODE_PORT` beats the default, `--host` exposes beyond loopback). When the default port is busy the server walks up to nine ports forward; an explicit `--port` fails instead of walking. The starter's `bun dev` script runs this.
 
-`prezzer build [entry] [--outdir <dir>] [--no-minify]` — defaults `index.html` and `dist`. `--outdir` must be inside the project and can't contain the entry. Use `--no-minify` when diagnosing what landed in the artifact.
+`prezzer build [entry] [--outdir <dir>] [--no-minify]` — defaults `index.html` and `dist`. `--outdir` must be inside the project and can't contain the entry. Use `--no-minify` when diagnosing what landed in the artifact. `prezzer --version` prints the engine version.
 
 ## The built-file pass
 
@@ -45,9 +45,9 @@ content-type: text/html;charset=utf-8
 
 **Cause:** serving the entry directly (`bun index.html`) SPA-fallbacks every unmatched path to the page, and the engine's bundler plugin only covers bundler-time resolution (imports, inlining at bake). Runtime HTTP requests for rooted paths have no `public/` convention there.
 
-**Fix:** serve with `prezzer dev` — the starter's `bun dev` script already does. It wraps the same HTML entry in `Bun.serve` with hot reload and resolves unmatched paths against `public/` with a traversal guard (verified on Bun 1.3.14: app and HMR chunks serve, assets return correct MIME types, misses and `..` traversal 404).
+**Fix:** serve with `prezzer dev` — the starter's `bun dev` script already does. It wraps the same HTML entry in `Bun.serve` with hot reload and serves unmatched paths from `public/` through Bun's directory routes, which handle ETag/304 revalidation and Range requests and reject non-canonical paths (verified on Bun 1.4.0: app and HMR chunks serve, assets return correct MIME types with ETags, misses and `..` traversal 404). The directory route is wired at startup, so a `public/` created while the server runs needs one dev restart — the startup line says which mode you're in. Root-absolute CSS references like `url(/fonts/x.woff2)` resolve through `prezzer/bun-plugin` in dev too, so self-hosted fonts work the same in dev and in the artifact.
 
-On prezzer 0.1.0, which predates the dev command, add this verified `dev.ts` and run `bun dev.ts` instead; the `bunfig.toml` serve plugins still apply to the imported HTML:
+On the npm-published 0.1.0, which predates the dev command, add this verified `dev.ts` and run `bun dev.ts` instead; the `bunfig.toml` serve plugins still apply to the imported HTML:
 
 ```ts
 import index from "./index.html";

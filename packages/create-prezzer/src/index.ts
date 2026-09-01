@@ -120,12 +120,12 @@ if (!options.target) fail('choose a directory, for example: bun create prezzer m
 const target = resolve(options.target)
 const existingEntries = await directoryEntries(target)
 if (existingEntries.length > 0 && !options.force) {
-  fail(`${target} is not empty; use --force to keep existing files`)
+  fail(`${target} is not empty; use --force to write anyway (template files overwrite collisions)`)
 }
 
 const name = packageName(target)
 const template = resolve(import.meta.dir, '../template')
-const prezzerVersion = process.env.PREZZER_PACKAGE_SPEC ?? '^0.1.0'
+const prezzerVersion = process.env.PREZZER_PACKAGE_SPEC ?? '^0.2.0'
 
 console.log(`${purple}create-prezzer${reset} ${muted}scaffolding${reset} ${cyan}${name}${reset}`)
 

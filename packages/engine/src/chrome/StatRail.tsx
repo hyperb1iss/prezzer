@@ -1,6 +1,7 @@
 import { motion } from 'motion/react'
 import { useDeckTheme } from '../engine/DeckContext'
 import { springs } from '../motion/animations'
+import { withAlpha } from '../theme/tokens'
 
 export interface Stat {
   value: string
@@ -22,7 +23,10 @@ export function StatRail({ stats }: { stats: Stat[] }) {
         >
           <div
             className="prezzer-stat-value"
-            style={{ color: theme.colors.coral, textShadow: `0 0 24px ${theme.colors.coral}44` }}
+            style={{
+              color: theme.colors.coral,
+              textShadow: `0 0 24px ${withAlpha(theme.colors.coral, 0.27)}`,
+            }}
           >
             {stat.value}
           </div>

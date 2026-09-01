@@ -39,7 +39,7 @@ export function App() {
 - `prezzer/widgets` exports the imperative widget registry.
 - `prezzer/theme` and `prezzer/motion` provide focused imports.
 - `prezzer/styles.css` contains the framework-free shell and chrome styles.
-- `prezzer/bun-plugin` keeps linked decks on one React and Motion instance during local development.
+- `prezzer/bun-plugin` keeps linked decks on one React and Motion instance and resolves root-absolute `public/` references for both the dev server and the bake.
 
 ## CLI
 
@@ -49,6 +49,6 @@ prezzer build
 prezzer build talk.html --outdir release
 ```
 
-`prezzer dev` serves the deck with hot reload and rooted `public/` paths, bound to localhost unless `--host` says otherwise. `prezzer build` uses Bun's browser compiler and Tailwind plugin to emit one self-contained HTML file that inlines literally referenced `public/` assets (and warns about the rest); pass `--no-minify` while diagnosing output.
+`prezzer dev` serves the deck with hot reload and rooted `public/` paths (ETag/304 and Range handling built in), on `127.0.0.1:1609` by default and bound to localhost unless `--host` says otherwise; when 1609 is busy it walks to the next free port. `prezzer build` uses Bun's browser compiler and Tailwind plugin to emit one self-contained HTML file that inlines literally referenced `public/` assets (and warns about the rest); pass `--no-minify` while diagnosing output. `prezzer --version` prints the engine version.
 
 Full authoring guidance lives in the [repository documentation](https://github.com/hyperb1iss/prezzer/blob/main/docs/deck-authoring.md).

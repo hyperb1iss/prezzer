@@ -116,6 +116,57 @@ describe('Deck', () => {
     expect(screen.getByText('add your first slide to begin')).toBeTruthy()
   })
 
+  test('opens the shortcut help overlay on ? and closes it on escape', async () => {
+    render(<Deck slides={deckWith(EmptySlide)} showProgressRail={false} />)
+
+    fireEvent.keyDown(window, { key: '?' })
+    expect(screen.getByRole('dialog', { name: 'keyboard' })).toBeTruthy()
+
+    fireEvent.keyDown(window, { key: 'Escape' })
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+  })
+
+  test('mirrors position without growing browser history', async () => {
+    render(<Deck slides={deckWith(BeatState, 2)} showProgressRail={false} />)
+    await waitFor(() => expect(window.location.hash).toBe('#1'))
+    const entries = history.length
+
+    fireEvent.keyDown(window, { key: ' ' })
+    await waitFor(() => expect(window.location.hash).toBe('#1.1'))
+    fireEvent.keyDown(window, { key: ' ' })
+    await waitFor(() => expect(window.location.hash).toBe('#2'))
+
+    expect(history.length).toBe(entries)
+  })
+
+  test('preserves host history.state while mirroring the hash', async () => {
+    history.replaceState({ hostRouter: 'kept' }, '', window.location.href)
+    render(<Deck slides={deckWith(EmptySlide)} showProgressRail={false} />)
+
+    fireEvent.keyDown(window, { key: 'End' })
+    await waitFor(() => expect(window.location.hash).toBe('#2'))
+    expect((history.state as { hostRouter?: string })?.hostRouter).toBe('kept')
+  })
+
+  test('rewrites a hand-typed hash that clamps to the deck', async () => {
+    render(<Deck slides={deckWith(EmptySlide)} showProgressRail={false} />)
+    await waitFor(() => expect(window.location.hash).toBe('#1'))
+
+    history.replaceState(null, '', '#9')
+    window.dispatchEvent(new Event('hashchange'))
+
+    await waitFor(() => expect(window.location.hash).toBe('#2'))
+    expect(screen.getByRole('region', { name: 'second' })).toBeTruthy()
+  })
+
+  test('leaves the URL alone when hashSync is off', async () => {
+    render(<Deck slides={deckWith(EmptySlide)} hashSync={false} showProgressRail={false} />)
+
+    fireEvent.keyDown(window, { key: 'End' })
+    await waitFor(() => expect(screen.getByRole('region', { name: 'second' })).toBeTruthy())
+    expect(window.location.hash).toBe('')
+  })
+
   test('clamps navigation when a live deck removes slides', async () => {
     const slides = deckWith(EmptySlide)
     const { rerender } = render(<Deck slides={slides} showProgressRail={false} />)

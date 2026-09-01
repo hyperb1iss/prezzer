@@ -16,7 +16,7 @@ export interface SlideDef {
   /** ▽ deep slide, first to compress when time runs short */
   deep?: boolean
   /** Honest status stamp rendered top-right, e.g. "GA" or "IN FLIGHT" */
-  badge?: string
+  badge?: RolloutStatus | (string & {})
 }
 
 /** SlideDef with every optional field resolved; what the engine works with. */
@@ -33,7 +33,11 @@ export interface ActDef {
   color: string
 }
 
-/** The badge vocabulary the built-in stamp styles cover; any string works. */
+/**
+ * The badge vocabulary the built-in stamp styles cover; any string works.
+ * The `string & {}` union half keeps autocomplete for these without
+ * closing the type to custom stamps.
+ */
 export type RolloutStatus = 'GA' | 'DEV ONLY' | 'NOT ROLLED OUT' | 'COMING SOON' | 'IN FLIGHT'
 
 export function resolveSlide(def: SlideDef): ResolvedSlideDef {

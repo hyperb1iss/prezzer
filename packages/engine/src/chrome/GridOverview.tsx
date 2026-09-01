@@ -1,6 +1,7 @@
 import { motion } from 'motion/react'
 import { useEffect, useRef } from 'react'
 import { useDeck } from '../engine/DeckContext'
+import { withAlpha } from '../theme/tokens'
 
 interface GridOverviewProps {
   onClose: () => void
@@ -11,7 +12,14 @@ export function GridOverview({ onClose }: GridOverviewProps) {
   const { slideIndex, goToSlide, slides, acts, theme } = useDeck()
   const dialogRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => dialogRef.current?.focus(), [])
+  useEffect(() => {
+    const previous = document.activeElement
+    dialogRef.current?.focus()
+    return () => {
+      // Hand focus back to wherever the presenter was before the overlay.
+      if (previous instanceof HTMLElement) previous.focus()
+    }
+  }, [])
 
   return (
     <motion.div
@@ -24,7 +32,7 @@ export function GridOverview({ onClose }: GridOverviewProps) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="prezzer-grid-overview"
-      style={{ backgroundColor: `${theme.colors.deepBlack}eb` }}
+      style={{ backgroundColor: withAlpha(theme.colors.deepBlack, 0.92) }}
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose()
       }}
@@ -70,8 +78,8 @@ export function GridOverview({ onClose }: GridOverviewProps) {
                 style={{
                   borderLeftColor: color,
                   backgroundColor: isCurrent ? theme.colors.surfaceElevated : theme.colors.surface,
-                  outlineColor: isCurrent ? `${color}88` : 'transparent',
-                  boxShadow: isCurrent ? `0 0 24px ${color}33` : 'none',
+                  outlineColor: isCurrent ? withAlpha(color, 0.53) : 'transparent',
+                  boxShadow: isCurrent ? `0 0 24px ${withAlpha(color, 0.2)}` : 'none',
                 }}
               >
                 <span className="prezzer-grid-card-meta">

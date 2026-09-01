@@ -1,6 +1,6 @@
 # Core API
 
-Accurate for `prezzer` 0.1.0. Source of truth when developing the engine itself: `packages/engine/src/`.
+Accurate for `prezzer` 0.2.0. Source of truth when developing the engine itself: `packages/engine/src/`.
 
 ## Deck
 
@@ -14,6 +14,7 @@ import { Deck } from "prezzer";
 | `slides`               | `readonly SlideDef[]` | required      | Navigation tolerates empty and live-changing lists; an empty deck renders a placeholder                                                                    |
 | `acts`                 | `readonly ActDef[]`   | derived       | Derived acts get one entry per distinct `act` number, titled `act N`, colored from the theme palette in order purple → cyan → coral → yellow → green → red |
 | `theme`                | `Theme`               | `silkCircuit` | See [theming.md](theming.md)                                                                                                                               |
+| `hashSync`             | `boolean`             | `true`        | Mirror position into `location.hash`; pass `false` when embedding the deck inside a host page that owns the URL                                            |
 | `designWidth`          | `number`              | `1920`        | Fixed design canvas, uniformly scaled to the viewport (reveal.js technique)                                                                                |
 | `designHeight`         | `number`              | `1080`        | Author in absolute pixels against this canvas; sizes stay stable at any window size                                                                        |
 | `minScale`, `maxScale` | `number`              | `0.2`, `2`    | Clamp on the viewport scale factor for extreme displays (tiny embeds, LED walls)                                                                           |
@@ -27,17 +28,17 @@ import { Deck } from "prezzer";
 
 Defaults below are what `resolveSlide` fills in; the engine always works with the resolved form.
 
-| Field        | Type             | Default   | Meaning                                                                                         |
-| ------------ | ---------------- | --------- | ----------------------------------------------------------------------------------------------- |
-| `id`         | `string`         | required  | Outline id, e.g. `"S9"` — stable across reorders; shown in notes and grid                       |
-| `title`      | `string`         | required  | Accessible label and grid card title                                                            |
-| `component`  | `ComponentType`  | required  | The slide itself                                                                                |
-| `act`        | `number`         | `0`       | Groups the progress rail and colors the grid cards; matches an `ActDef.number`                  |
-| `beats`      | `number`         | `1`       | Total in-slide states **including the initial one**; `1` = no in-slide advance                  |
-| `transition` | `TransitionType` | `"morph"` | See [motion.md](motion.md) for the eight personalities                                          |
-| `notes`      | `string[]`       | `[]`      | Speaker notes for the `n` overlay                                                               |
-| `deep`       | `boolean`        | —         | ▽ deep slide, first to compress when time runs short; marked in notes and grid                  |
-| `badge`      | `string`         | —         | Honest status stamp rendered top-right by the shell; see RolloutBadge in [chrome.md](chrome.md) |
+| Field        | Type                      | Default   | Meaning                                                                                                                                                                              |
+| ------------ | ------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`         | `string`                  | required  | Outline id, e.g. `"S9"` — stable across reorders; shown in notes and grid                                                                                                            |
+| `title`      | `string`                  | required  | Accessible label and grid card title                                                                                                                                                 |
+| `component`  | `ComponentType`           | required  | The slide itself                                                                                                                                                                     |
+| `act`        | `number`                  | `0`       | Groups the progress rail and colors the grid cards; matches an `ActDef.number`                                                                                                       |
+| `beats`      | `number`                  | `1`       | Total in-slide states **including the initial one**; `1` = no in-slide advance                                                                                                       |
+| `transition` | `TransitionType`          | `"morph"` | See [motion.md](motion.md) for the eight personalities                                                                                                                               |
+| `notes`      | `string[]`                | `[]`      | Speaker notes for the `n` overlay                                                                                                                                                    |
+| `deep`       | `boolean`                 | —         | ▽ deep slide, first to compress when time runs short; marked in notes and grid                                                                                                       |
+| `badge`      | `RolloutStatus \| string` | —         | Honest status stamp rendered top-right by the shell; the `RolloutStatus` union autocompletes the built-in vocabulary, any string renders. See RolloutBadge in [chrome.md](chrome.md) |
 
 `ActDef` is `{ number: number; title: string; color: string }`. Pass explicit acts when labels and colors carry meaning; otherwise let the deck derive them.
 
@@ -64,7 +65,7 @@ All deck hooks throw outside a `DeckProvider`.
 
 `useDeck()` surface: state — `slideIndex`, `beat`, `direction`, `slides` (resolved), `acts`, `theme`, `totalSlides`, `denyMode`, `autoplaySignal`; actions — `next()`, `prev()`, `nextSlide()`, `prevSlide()`, `goToSlide(index)`, `toggleDeny()`, `fireAutoplay()`.
 
-The root also exports the shell's building blocks — `useKeyboardShortcuts`, `useSlideScale`, `useTouchNavigation`, `useFullscreen`, `SlideContainer` — for custom shells only; `Deck` already wires them.
+The root also exports the shell's building blocks — `useKeyboardShortcuts`, `useSlideScale`, `useTouchNavigation`, `useFullscreen`, `SlideContainer`, and the `interactiveElementSelector` guard string — for custom shells only; `Deck` already wires them. A custom shell also needs `useSlideWidgets()` from `prezzer/widgets` to wire `onAdvanceIntercept`, or widgets never claim the spacebar (see [widgets.md](widgets.md)).
 
 ## Navigation model
 
@@ -78,12 +79,13 @@ The root also exports the shell's building blocks — `useKeyboardShortcuts`, `u
 | `g` / `n` / `f`            | Grid overview / speaker notes / fullscreen                                                     |
 | `d`                        | Deny mode; auto-resets on slide change                                                         |
 | `a`                        | Fire the autoplay signal (increments `autoplaySignal`)                                         |
-| `esc`                      | Close grid, then notes, then exit fullscreen                                                   |
+| `?`                        | Shortcut help overlay                                                                          |
+| `esc`                      | Close help, then grid, then notes, then exit fullscreen                                        |
 
-Shortcuts are skipped when `meta`, `ctrl`, or `alt` is held (`shift` stays live — it upgrades advances to whole-slide jumps) or when the event target is inside the guard selector: `a`, `button`, `input`, `select`, `textarea`, any `[contenteditable]` not set to `"false"`, or anything under `[data-prezzer-interactive]` — browser shortcuts and embedded interactive demos keep working. Mark custom demo surfaces (canvas playgrounds, ARIA widgets) with `data-prezzer-interactive` to keep the deck's hands off them; the same guard applies to touch. Page up/down means presenter clickers work unconfigured.
+Shortcuts are skipped when `meta`, `ctrl`, or `alt` is held (`shift` stays live — it upgrades advances to whole-slide jumps) or when the event target is inside the guard selector: `a`, `button`, `input`, `select`, `textarea`, `video`, `audio`, `summary`, `[role="button"]`, any `[contenteditable]` not set to `"false"`, or anything under `[data-prezzer-interactive]` — browser shortcuts and embedded interactive demos keep working. Mark custom demo surfaces (canvas playgrounds, ARIA widgets) with `data-prezzer-interactive` to keep the deck's hands off them; the same guard applies to touch. Holding a toggle key (`f`/`n`/`g`/`d`/`a`) fires once, not per key-repeat. Page up/down means presenter clickers work unconfigured.
 
-Touch shares the exact same ordering guarantees: horizontal swipes past 50px navigate, taps on the outer 20% screen edges step back/forward, and center taps advance. **Every forward gesture — left swipe, right-edge tap, center tap — starts a pending widget before it advances the deck**; backward gestures never do. Taps must be under 300ms with less than 10px of movement, and touches starting inside the guard selector above are ignored.
+Touch shares the exact same ordering guarantees: horizontal swipes past 50px navigate, taps on the outer 20% screen edges step back/forward, and center taps advance. **Every forward gesture — left swipe, right-edge tap, center tap — starts a pending widget before it advances the deck**; backward gestures never do. Taps must be under 300ms with less than 10px of movement, touches starting inside the guard selector above are ignored, multi-finger gestures (pinch/zoom) never navigate, and touch navigation is disabled entirely while the grid or notes overlay is open.
 
 ## Hash deep links
 
-The URL hash mirrors position so refresh resumes exactly where the presenter was, and editing the hash navigates. Indexing is mixed: the slide number is **1-indexed positional**, the beat suffix is the **raw 0-indexed beat**. So `#4.2` is slide four with two reveals fired — beat index 2, which the notes overlay displays as `beat 3/N` — and beat zero canonicalizes to a bare `#4`. Both parts are clamped to valid ranges. Slide numbers are not outline ids: when an outline skips numbers (`S15` → `S17`), position and id drift. Navigate by position.
+The URL hash mirrors position so refresh resumes exactly where the presenter was, and editing the hash navigates. The mirror uses `history.replaceState`, so navigating a deck never grows browser history — Back leaves the page instead of unwinding the talk. Indexing is mixed: the slide number is **1-indexed positional**, the beat suffix is the **raw 0-indexed beat**. So `#4.2` is slide four with two reveals fired — beat index 2, which the notes overlay displays as `beat 3/N` — and beat zero canonicalizes to a bare `#4`. Both parts are clamped to valid ranges, and a hand-typed hash beyond the deck is rewritten to the clamped position it actually shows. Slide numbers are not outline ids: when an outline skips numbers (`S15` → `S17`), position and id drift. Navigate by position. Disable the whole mirror with `hashSync={false}` when embedding.

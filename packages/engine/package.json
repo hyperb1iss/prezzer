@@ -1,6 +1,6 @@
 {
   "name": "prezzer",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Interactive presentations with beat-driven slides, real React, and decks you own",
   "license": "MIT",
   "author": "Stefanie Jane <stef@hyperbliss.tech>",
@@ -10,6 +10,9 @@
     "directory": "packages/engine"
   },
   "type": "module",
+  "engines": {
+    "bun": ">=1.4.0"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
@@ -63,12 +66,12 @@
     "bun-plugin-tailwind": "^0.1.2"
   },
   "devDependencies": {
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "motion": "^12.42.2",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
-    "typescript": "^7.0.2"
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "motion": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "typescript": "catalog:"
   },
   "publishConfig": {
     "access": "public"

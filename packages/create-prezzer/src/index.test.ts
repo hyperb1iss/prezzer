@@ -10,6 +10,13 @@ afterEach(async () => {
 })
 
 describe('create-prezzer', () => {
+  test('default package spec tracks the engine version', async () => {
+    const source = await readFile(resolve(import.meta.dir, 'index.ts'), 'utf8')
+    const fallback = /PREZZER_PACKAGE_SPEC \?\? '\^([^']+)'/.exec(source)?.[1]
+    const engine = await Bun.file(resolve(import.meta.dir, '../../engine/package.json')).json()
+    expect(fallback).toBe(engine.version)
+  })
+
   test('renders a ready-to-install deck without template residue', async () => {
     const parent = await mkdtemp(resolve(tmpdir(), 'create-prezzer-test-'))
     const target = resolve(parent, 'Electric Story')

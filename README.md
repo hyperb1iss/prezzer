@@ -23,7 +23,7 @@
 
 <p align="center">
   <a href="https://bun.sh">
-    <img src="https://img.shields.io/badge/Bun-%E2%89%A51.3-14151a?style=for-the-badge&logo=bun&logoColor=white" alt="Bun">
+    <img src="https://img.shields.io/badge/Bun-%E2%89%A51.4-14151a?style=for-the-badge&logo=bun&logoColor=white" alt="Bun">
   </a>
   <a href="https://react.dev">
     <img src="https://img.shields.io/badge/React-19-61dafb?style=for-the-badge&logo=react&logoColor=black" alt="React 19">
@@ -57,13 +57,13 @@ A Prezzer deck is real software. It lives in its own repository, renders with re
 - 🎬 **Beat-driven slides** — every slide is a little state machine; each press of space reveals the next beat of the story
 - ⚡ **Bun-native end to end** — one runtime for the dev server, Tailwind, TypeScript, tests, and the build
 - 📦 **One-file offline artifact** — `prezzer build` bakes markup, styles, scripts, images, and self-hosted fonts into a single HTML file
-- 🎭 **Presenter chrome built in** — speaker notes, grid overview, act-aware progress rail, and honest rollout badges
+- 🎭 **Presenter chrome built in** — speaker notes, grid overview, shortcut help, act-aware progress rail, and honest rollout badges
 - 💫 **Eight slide transitions** — `portal`, `glitch`, `zoom`, `rise`, `spiral`, `morph`, `split`, and `slide`, chosen per slide
 - 🔗 **Hash deep links** — `#4.2` reopens slide four mid-reveal; refresh resumes exactly where you were
-- 🧨 **Deny mode** — every slide gets a free failure-path variant, made for live security demos
+- 🧨 **Deny mode** — one keypress flips slides that read `useDenyMode()` into their authored failure-path variant, made for live security demos
 - 🖱️ **Keyboard, touch, and widgets** — all three advance through the same ordering guarantees, and self-timed demos can claim the spacebar before the deck moves
 - 🌌 **SilkCircuit theme** — electric purple and neon cyan out of the box, fully overridable through design tokens
-- ♿ **Accessibility that ships** — reduced-motion support, unrevealed beats stay out of the accessibility tree, focus-visible styling everywhere
+- ♿ **Accessibility that ships** — reduced-motion support, screen-reader slide announcements, focus-restoring overlays, and unrevealed beats stay out of the accessibility tree
 
 ## ⚡ Quick Start
 
@@ -144,6 +144,7 @@ export function Talk() {
 | `f`                  | fullscreen                          |
 | `d`                  | deny mode for failure-path demos    |
 | `a`                  | fire the autoplay signal to widgets |
+| `?`                  | shortcut help overlay               |
 
 Page up and page down mean presenter clickers work out of the box.
 

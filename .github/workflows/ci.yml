@@ -8,8 +8,12 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   ci:
-    uses: hyperb1iss/shared-workflows/.github/workflows/bun-ci.yml@852545007ba5e63edb14230e5f0d564191c42f98
+    uses: hyperb1iss/shared-workflows/.github/workflows/bun-ci.yml@e37ea32677f7135df04380afe5366063d416212a
     with:
-      bun-version: "1.3.14"
+      bun-version: "1.4.0"

@@ -1,6 +1,6 @@
 {
   "name": "create-prezzer",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Create a Bun-native Prezzer deck",
   "license": "MIT",
   "author": "Stefanie Jane <stef@hyperbliss.tech>",
@@ -25,11 +25,11 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "engines": {
-    "bun": ">=1.3.14"
+    "bun": ">=1.4.0"
   },
   "devDependencies": {
-    "@types/bun": "^1.3.14",
-    "typescript": "^7.0.2"
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
   },
   "publishConfig": {
     "access": "public"

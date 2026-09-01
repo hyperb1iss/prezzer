@@ -20,7 +20,7 @@ bun run --cwd packages/engine typecheck
 bun test packages/engine/src/engine/Deck.test.tsx
 ```
 
-Run `bun test` **from the repo root** — the happy-dom registration lives in the root `bunfig.toml` test preload, so tests invoked from inside a package fail on every DOM access.
+`bun test` works from the repo root or inside any package: the happy-dom registration lives in `test/setup.ts`, preloaded by the root `bunfig.toml` and mirrored by a per-package `bunfig.toml` in every workspace member with tests. A new package with tests needs the same two-line mirror or its tests fail on every DOM access.
 
 ## Layout
 

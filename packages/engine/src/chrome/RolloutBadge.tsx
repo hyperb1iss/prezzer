@@ -1,5 +1,6 @@
 import { useDeckTheme } from '../engine/DeckContext'
-import type { Theme } from '../theme/tokens'
+import { type Theme, withAlpha } from '../theme/tokens'
+import type { RolloutStatus } from '../types'
 
 interface BadgeStyle {
   color: string
@@ -18,10 +19,10 @@ function styleFor(status: string, theme: Theme): BadgeStyle {
 }
 
 interface RolloutBadgeProps {
-  status: string
+  status: RolloutStatus | (string & {})
   /** Override the built-in color for statuses outside the known vocabulary */
-  color?: string
-  filled?: boolean
+  color?: string | undefined
+  filled?: boolean | undefined
 }
 
 /** Honest status stamp, top-right of the canvas. */
@@ -36,9 +37,9 @@ export function RolloutBadge({ status, color, filled }: RolloutBadgeProps) {
       style={{
         color: badgeColor,
         borderColor: badgeColor,
-        backgroundColor: isFilled ? `${badgeColor}1a` : 'transparent',
-        boxShadow: `0 0 16px ${badgeColor}44`,
-        textShadow: `0 0 10px ${badgeColor}66`,
+        backgroundColor: isFilled ? withAlpha(badgeColor, 0.1) : 'transparent',
+        boxShadow: `0 0 16px ${withAlpha(badgeColor, 0.27)}`,
+        textShadow: `0 0 10px ${withAlpha(badgeColor, 0.4)}`,
       }}
     >
       {status}

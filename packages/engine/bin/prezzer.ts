@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
 
 import tailwind from 'bun-plugin-tailwind'
-import type { BunPlugin } from 'bun'
 import { lstat, mkdir, mkdtemp, readdir, realpath, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { basename, dirname, isAbsolute, relative, resolve, sep } from 'node:path'
-import prezzerPlugin from '../bun-plugin'
+import prezzerPlugin, { bundlerResolvedAssets } from '../bun-plugin'
+import { version } from '../package.json'
 
 const color = (code: string) => (Bun.enableANSIColors ? code : '')
 const purple = color('\x1b[38;2;225;53;255m')
@@ -34,6 +34,7 @@ ${cyan}Options${reset}
   build
     --outdir <dir>   output directory ${muted}(default: dist)${reset}
     --no-minify      keep readable output while diagnosing builds
+  -v, --version      print the engine version
 
 ${cyan}Examples${reset}
   prezzer dev
@@ -55,25 +56,6 @@ function fail(message: string): never {
   process.exit(1)
 }
 
-/** public/ files the bundler resolved itself; already inlined, never warned about */
-const bundlerResolvedAssets = new Set<string>()
-
-const publicAssetsPlugin: BunPlugin = {
-  name: 'prezzer-public-assets',
-  setup(builder) {
-    builder.onResolve({ filter: /^\// }, async ({ path }) => {
-      if (await Bun.file(path).exists()) return undefined
-      const projectPath = path.startsWith(process.cwd())
-        ? relative(process.cwd(), path)
-        : path.slice(1)
-      const publicPath = resolve('public', projectPath)
-      if (!(await Bun.file(publicPath).exists())) return undefined
-      bundlerResolvedAssets.add(publicPath)
-      return { path: publicPath }
-    })
-  },
-}
-
 async function collectFiles(directory: string): Promise<string[]> {
   try {
     const entries = await readdir(directory, { withFileTypes: true })
@@ -90,27 +72,56 @@ async function collectFiles(directory: string): Promise<string[]> {
   }
 }
 
+const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
 async function inlinePublicAssets(html: string): Promise<{ html: string; unreferenced: string[] }> {
   const publicRoot = resolve('public')
   const files = await collectFiles(publicRoot)
   const unreferenced: string[] = []
+  const replacements = new Map<string, string>()
 
   for (const path of files) {
     const assetPath = `/${relative(publicRoot, path).replaceAll('\\', '/')}`
-    if (!html.includes(assetPath)) {
-      if (!bundlerResolvedAssets.has(path)) unreferenced.push(assetPath)
+    const tokens = new Set([assetPath, encodeURI(assetPath)])
+    const matched = [...tokens].filter((token) => html.includes(token))
+    if (matched.length === 0) {
+      const hidden = basename(path).startsWith('.')
+      if (!bundlerResolvedAssets.has(path) && !hidden) unreferenced.push(assetPath)
       continue
     }
 
     const file = Bun.file(path)
-    const base64 = Buffer.from(await file.arrayBuffer()).toString('base64')
-    html = html.replaceAll(
-      assetPath,
-      `data:${file.type || 'application/octet-stream'};base64,${base64}`
+    const dataUri = `data:${file.type || 'application/octet-stream'};base64,${(
+      await file.bytes()
+    ).toBase64()}`
+    for (const token of matched) replacements.set(token, dataUri)
+  }
+
+  if (replacements.size > 0) {
+    // One pass, longest token first: /a.png must never rewrite the middle
+    // of /a.png.license, and inserted base64 must never be rescanned. A
+    // query suffix would corrupt a data URI, so it is consumed with the path.
+    const alternation = [...replacements.keys()]
+      .sort((a, b) => b.length - a.length)
+      .map((token) => escapeRegExp(token))
+      .join('|')
+    html = html.replace(
+      new RegExp(`(${alternation})(\\?[\\w.%=&~-]*)?`, 'g'),
+      (_match, token: string) => replacements.get(token) as string
     )
   }
 
   return { html, unreferenced }
+}
+
+/** remote stylesheets, scripts, or CSS-loaded assets that keep the artifact network-dependent */
+function hasRemoteReferences(html: string): boolean {
+  if (/url\(\s*["']?https?:\/\//i.test(html)) return true
+  if (/<script[^>]*\ssrc\s*=\s*["']https?:\/\//i.test(html)) return true
+  const links = html.matchAll(/<link\b[^>]*>/gi)
+  return [...links].some(
+    (tag) => /rel\s*=\s*["']?stylesheet/i.test(tag[0]) && /href\s*=\s*["']https?:\/\//i.test(tag[0])
+  )
 }
 
 function isWithin(parent: string, child: string) {
@@ -146,15 +157,20 @@ async function dev(args: string[]) {
   let hostname = '127.0.0.1'
   let entrySet = false
 
+  let portSet = false
+
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index]
     if (argument === '--port') {
       const value = Number(args[index + 1])
       if (!Number.isInteger(value) || value <= 0) fail('--port needs a positive number')
       port = value
+      portSet = true
       index += 1
     } else if (argument === '--host') {
-      hostname = args[index + 1] ?? fail('--host needs a hostname')
+      const value = args[index + 1]
+      if (!value || value.startsWith('-')) fail('--host needs a hostname')
+      hostname = value
       index += 1
     } else if (argument?.startsWith('-')) {
       fail(`unknown option: ${argument}`)
@@ -170,30 +186,56 @@ async function dev(args: string[]) {
   if (!(await Bun.file(entryPath).exists())) fail(`entry not found: ${entry}`)
   const { default: index } = await import(entryPath)
 
+  // The exact '/' route outranks the '/*' directory route, and the
+  // directory route rejects non-canonical paths, so public/ is served
+  // with ETag/304/Range handling and no traversal surface. Bun opens the
+  // directory eagerly, so a deck without public/ skips the route and
+  // 404s asset paths instead — a hand-rolled fallback would give up the
+  // route's symlink confinement and Range semantics.
   const publicRoot = resolve('public')
-  const server = Bun.serve({
-    port,
-    hostname,
-    routes: { '/': index },
-    development: { hmr: true, console: true },
-    async fetch(request) {
-      let pathname: string
-      try {
-        pathname = decodeURIComponent(new URL(request.url).pathname)
-      } catch {
-        return new Response('bad request', { status: 400 })
-      }
-      const assetPath = resolve(publicRoot, pathname.slice(1))
-      if (isWithin(publicRoot, assetPath)) {
-        const asset = Bun.file(assetPath)
-        if (await asset.exists()) return new Response(asset)
-      }
-      return new Response('not found', { status: 404 })
-    },
-  })
+  const hasPublicDirectory = await lstat(publicRoot)
+    .then((stats) => stats.isDirectory())
+    .catch(() => false)
 
+  const notFound = () => new Response('not found', { status: 404 })
+
+  const serve = (candidatePort: number) => {
+    const shared = {
+      port: candidatePort,
+      hostname,
+      development: { hmr: true, console: true },
+      fetch: notFound,
+    }
+    return hasPublicDirectory
+      ? Bun.serve({ ...shared, routes: { '/': index, '/*': { dir: publicRoot } } })
+      : Bun.serve({ ...shared, routes: { '/': index } })
+  }
+
+  let server: ReturnType<typeof serve> | undefined
+  // When the default port is busy, walk forward like every dev server;
+  // an explicit --port is a contract, so that one fails instead.
+  const attempts = portSet ? [port] : Array.from({ length: 10 }, (_, step) => port + step)
+  for (const candidate of attempts) {
+    try {
+      server = serve(candidate)
+      break
+    } catch (error) {
+      if ((error as { code?: string }).code !== 'EADDRINUSE') throw error
+    }
+  }
+  if (!server) {
+    fail(
+      portSet
+        ? `port ${port} is already in use — stop the other server or pick another --port`
+        : `ports ${port}–${port + attempts.length - 1} are all in use`
+    )
+  }
+
+  const assetNote = hasPublicDirectory
+    ? 'public/ served'
+    : 'no public/ yet — restart dev after creating it'
   console.log(
-    `${purple}prezzer${reset} ${muted}dev${reset} ${cyan}${entry}${reset} ${muted}→${reset} ${cyan}${server.url}${reset} ${muted}· hot reload on · public/ served${reset}`
+    `${purple}prezzer${reset} ${muted}dev${reset} ${cyan}${entry}${reset} ${muted}→${reset} ${cyan}${server.url}${reset} ${muted}· hot reload on · ${assetNote}${reset}`
   )
 }
 
@@ -257,7 +299,7 @@ async function build(args: string[]) {
       compile: true,
       minify,
       define: { 'process.env.NODE_ENV': JSON.stringify('production') },
-      plugins: [publicAssetsPlugin, prezzerPlugin, tailwind],
+      plugins: [prezzerPlugin, tailwind],
     })
 
     if (!result.success) {
@@ -268,7 +310,11 @@ async function build(args: string[]) {
 
     const stagedOutputPath = resolve(stagingDirectory, basename(entryPath))
     const standalone = result.outputs.find((output) => output.path === stagedOutputPath)
-    if (!standalone) fail('Bun did not emit the standalone deck')
+    if (!standalone) {
+      console.error(`${red}error${reset} Bun did not emit the standalone deck`)
+      process.exitCode = 1
+      return
+    }
 
     const { html, unreferenced } = await inlinePublicAssets(await standalone.text())
     await mkdir(outputDirectory, { recursive: true })
@@ -280,10 +326,18 @@ async function build(args: string[]) {
       )
     }
 
+    const remote = hasRemoteReferences(html)
+    if (remote) {
+      console.warn(
+        `${yellow}⚠${reset} ${muted}the artifact still loads remote stylesheets, scripts, or fonts — offline shows fallbacks; self-host to bake full fidelity${reset}`
+      )
+    }
+
     const elapsed = formatDuration(performance.now() - startedAt)
     const displayPath = relative(process.cwd(), outputPath) || outputPath
+    const tagline = remote ? 'one file, network fallbacks noted above' : 'one file, works offline'
     console.log(
-      `${green}✓${reset} ${cyan}${displayPath}${reset} ${muted}·${reset} ${coral}${formatSize(bytes)}${reset} ${muted}·${reset} ${coral}${elapsed}${reset} ${muted}· one file, works offline${reset}`
+      `${green}✓${reset} ${cyan}${displayPath}${reset} ${muted}·${reset} ${coral}${formatSize(bytes)}${reset} ${muted}·${reset} ${coral}${elapsed}${reset} ${muted}· ${tagline}${reset}`
     )
   } finally {
     await rm(stagingDirectory, { recursive: true, force: true })
@@ -294,6 +348,8 @@ const [command, ...args] = Bun.argv.slice(2)
 
 if (!command || command === 'help' || command === '--help' || command === '-h') {
   printHelp()
+} else if (command === '--version' || command === '-v' || command === 'version') {
+  console.log(version)
 } else if (command === 'dev') {
   await dev(args)
 } else if (command === 'build') {

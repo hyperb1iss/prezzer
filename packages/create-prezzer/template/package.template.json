@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "packageManager": "bun@1.3.14",
+  "packageManager": "bun@1.4.0",
   "engines": {
-    "bun": ">=1.3.14"
+    "bun": ">=1.4.0"
   },
   "scripts": {
     "dev": "prezzer dev",
@@ -17,18 +17,18 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "motion": "^12.42.2",
+    "motion": "^13.1.1",
     "prezzer": "{{prezzerVersion}}",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.3",
-    "@types/bun": "^1.3.14",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
+    "@biomejs/biome": "^2.5.11",
+    "@types/bun": "^1.4.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
     "bun-plugin-tailwind": "^0.1.2",
-    "tailwindcss": "^4.3.2",
+    "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2"
   }
 }

@@ -14,7 +14,7 @@ bun create prezzer my-talk
 The command writes the starter, installs dependencies with Bun, and initializes Git when the target is not already inside a repository.
 
 ```text
---force         keep existing files in a non-empty target
+--force         write into a non-empty target; template files overwrite name collisions
 --no-install    skip bun install
 --no-git        skip git init
 -h, --help      show usage

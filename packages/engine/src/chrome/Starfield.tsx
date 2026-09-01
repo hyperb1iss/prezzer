@@ -64,25 +64,21 @@ export function Starfield({ count = 32, className = '', palette }: StarfieldProp
             backgroundColor: star.color,
             opacity: star.opacity,
           }}
-          animate={
-            reduceMotion
-              ? undefined
-              : {
+          {...(reduceMotion
+            ? {}
+            : {
+                animate: {
                   x: [0, star.driftX, 0],
                   y: [0, star.driftY, 0],
                   opacity: [star.opacity * 0.6, star.opacity, star.opacity * 0.6],
-                }
-          }
-          transition={
-            reduceMotion
-              ? undefined
-              : {
+                },
+                transition: {
                   duration: star.duration,
                   repeat: Number.POSITIVE_INFINITY,
                   delay: star.delay,
-                  ease: 'easeInOut',
-                }
-          }
+                  ease: 'easeInOut' as const,
+                },
+              })}
         />
       ))}
     </div>

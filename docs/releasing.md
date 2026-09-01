@@ -4,7 +4,7 @@
 
 ## Prepare
 
-1. Update both package versions and the default `prezzerVersion` in `packages/create-prezzer/src/index.ts` when the release is not `0.1.0`.
+1. Update both package versions and the scaffolder's default engine spec in `packages/create-prezzer/src/index.ts`. A test asserts the default matches the engine version, so `bun test` catches a missed bump. (`PREZZER_PACKAGE_SPEC` overrides the default for local smoke tests against a tarball.)
 2. Run `bun install` to refresh `bun.lock`.
 3. Run `bun run check` and `bun run build`.
 4. Pack both packages and run the tarball scaffolding smoke test before publishing.

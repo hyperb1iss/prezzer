@@ -47,7 +47,7 @@ content-type: text/html;charset=utf-8
 
 **Fix:** serve with `prezzer dev` — the starter's `bun dev` script already does. It wraps the same HTML entry in `Bun.serve` with hot reload and serves unmatched paths from `public/` through Bun's directory routes, which handle ETag/304 revalidation and Range requests and reject non-canonical paths (verified on Bun 1.4.0: app and HMR chunks serve, assets return correct MIME types with ETags, misses and `..` traversal 404). Root-absolute CSS references like `url(/fonts/x.woff2)` resolve through `prezzer/bun-plugin` in dev too, so self-hosted fonts work the same in dev and in the artifact.
 
-On prezzer 0.1.0, which predates the dev command, add this verified `dev.ts` and run `bun dev.ts` instead; the `bunfig.toml` serve plugins still apply to the imported HTML:
+On the npm-published 0.1.0, which predates the dev command, add this verified `dev.ts` and run `bun dev.ts` instead; the `bunfig.toml` serve plugins still apply to the imported HTML:
 
 ```ts
 import index from "./index.html";

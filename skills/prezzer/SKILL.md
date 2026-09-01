@@ -80,7 +80,7 @@ A strong deck has a factual outline, a timing budget, a narrative arc, a compres
 
 ## Gotchas that bite fastest
 
-- **Serve with `prezzer dev`, never plain `bun index.html`.** The bare HTML server SPA-fallbacks every unmatched path, so `<img src="/art/x.png">`, `fetch("/shots/a.json")`, and CSS `url(/fonts/x.woff2)` return the HTML page while the bake works fine. The starter's `bun dev` script already runs `prezzer dev`, which serves `public/` correctly; on prezzer 0.1.0 (predates the command) use the verified `dev.ts` fallback in [references/verification.md](references/verification.md).
+- **Serve with `prezzer dev`, never plain `bun index.html`.** The bare HTML server SPA-fallbacks every unmatched path, so `<img src="/art/x.png">`, `fetch("/shots/a.json")`, and CSS `url(/fonts/x.woff2)` return the HTML page while the bake works fine. The starter's `bun dev` script already runs `prezzer dev`, which serves `public/` correctly; on the npm-published 0.1.0 (which predates the command) use the verified `dev.ts` fallback in [references/verification.md](references/verification.md).
 - **The bake inlines only literal asset paths.** `prezzer build` string-matches rooted paths against the built output; a runtime-constructed path like `` `/art/${id}.png` `` is never inlined and silently breaks offline. Keep asset paths literal.
 - **`<Beat>` wrappers are motion-transformed**, so they become the containing block for absolutely-positioned children. `bottom`-anchoring lands at the wrapper's flow position, not the slide bottom. Prefer flow layout inside beats.
 - **Hash routing is positional and mixed-index.** `#16` is the sixteenth slide, not outline id `S16`, and the beat suffix is 0-indexed — `#4.2` is slide four with two reveals already fired.

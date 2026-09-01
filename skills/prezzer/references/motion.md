@@ -50,6 +50,8 @@ Ready-made `Variants` for `motion.*` elements. Unless noted, animate `initial="h
 | `hoverLift`                        | Not variants: a `whileHover` value (lift + shadow)                         |
 | `typing`                           | Config object: `charDelay` 25ms, `wordDelay` 80ms, `cursorBlinkRate` 800ms |
 
+`getTransitionVariants(type)` and `getTransitionSpring(type)` return the enter/exit variants and spring for any `TransitionType` — needed only by custom shells that replace `SlideContainer`.
+
 ```tsx
 <motion.ul variants={staggerContainer} initial="hidden" animate="visible">
   {items.map((item) => (

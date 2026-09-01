@@ -28,17 +28,17 @@ import { Deck } from "prezzer";
 
 Defaults below are what `resolveSlide` fills in; the engine always works with the resolved form.
 
-| Field        | Type             | Default   | Meaning                                                                                         |
-| ------------ | ---------------- | --------- | ----------------------------------------------------------------------------------------------- |
-| `id`         | `string`         | required  | Outline id, e.g. `"S9"` — stable across reorders; shown in notes and grid                       |
-| `title`      | `string`         | required  | Accessible label and grid card title                                                            |
-| `component`  | `ComponentType`  | required  | The slide itself                                                                                |
-| `act`        | `number`         | `0`       | Groups the progress rail and colors the grid cards; matches an `ActDef.number`                  |
-| `beats`      | `number`         | `1`       | Total in-slide states **including the initial one**; `1` = no in-slide advance                  |
-| `transition` | `TransitionType` | `"morph"` | See [motion.md](motion.md) for the eight personalities                                          |
-| `notes`      | `string[]`       | `[]`      | Speaker notes for the `n` overlay                                                               |
-| `deep`       | `boolean`        | —         | ▽ deep slide, first to compress when time runs short; marked in notes and grid                  |
-| `badge`      | `string`         | —         | Honest status stamp rendered top-right by the shell; see RolloutBadge in [chrome.md](chrome.md) |
+| Field        | Type                      | Default   | Meaning                                                                                                                                                                              |
+| ------------ | ------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`         | `string`                  | required  | Outline id, e.g. `"S9"` — stable across reorders; shown in notes and grid                                                                                                            |
+| `title`      | `string`                  | required  | Accessible label and grid card title                                                                                                                                                 |
+| `component`  | `ComponentType`           | required  | The slide itself                                                                                                                                                                     |
+| `act`        | `number`                  | `0`       | Groups the progress rail and colors the grid cards; matches an `ActDef.number`                                                                                                       |
+| `beats`      | `number`                  | `1`       | Total in-slide states **including the initial one**; `1` = no in-slide advance                                                                                                       |
+| `transition` | `TransitionType`          | `"morph"` | See [motion.md](motion.md) for the eight personalities                                                                                                                               |
+| `notes`      | `string[]`                | `[]`      | Speaker notes for the `n` overlay                                                                                                                                                    |
+| `deep`       | `boolean`                 | —         | ▽ deep slide, first to compress when time runs short; marked in notes and grid                                                                                                       |
+| `badge`      | `RolloutStatus \| string` | —         | Honest status stamp rendered top-right by the shell; the `RolloutStatus` union autocompletes the built-in vocabulary, any string renders. See RolloutBadge in [chrome.md](chrome.md) |
 
 `ActDef` is `{ number: number; title: string; color: string }`. Pass explicit acts when labels and colors carry meaning; otherwise let the deck derive them.
 
@@ -65,7 +65,7 @@ All deck hooks throw outside a `DeckProvider`.
 
 `useDeck()` surface: state — `slideIndex`, `beat`, `direction`, `slides` (resolved), `acts`, `theme`, `totalSlides`, `denyMode`, `autoplaySignal`; actions — `next()`, `prev()`, `nextSlide()`, `prevSlide()`, `goToSlide(index)`, `toggleDeny()`, `fireAutoplay()`.
 
-The root also exports the shell's building blocks — `useKeyboardShortcuts`, `useSlideScale`, `useTouchNavigation`, `useFullscreen`, `SlideContainer` — for custom shells only; `Deck` already wires them.
+The root also exports the shell's building blocks — `useKeyboardShortcuts`, `useSlideScale`, `useTouchNavigation`, `useFullscreen`, `SlideContainer`, and the `interactiveElementSelector` guard string — for custom shells only; `Deck` already wires them. A custom shell also needs `useSlideWidgets()` from `prezzer/widgets` to wire `onAdvanceIntercept`, or widgets never claim the spacebar (see [widgets.md](widgets.md)).
 
 ## Navigation model
 

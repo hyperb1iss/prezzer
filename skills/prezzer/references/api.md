@@ -80,6 +80,7 @@ The root also exports the shell's building blocks — `useKeyboardShortcuts`, `u
 | `d`                        | Deny mode; auto-resets on slide change                                                         |
 | `a`                        | Fire the autoplay signal (increments `autoplaySignal`)                                         |
 | `?`                        | Shortcut help overlay                                                                          |
+| `p`                        | Open (or focus) the presenter window                                                           |
 | `esc`                      | Close the open modal, then notes, then exit fullscreen                                         |
 
 Shortcuts are skipped when `meta`, `ctrl`, or `alt` is held (`shift` stays live — it upgrades advances to whole-slide jumps) or when the event target is inside the guard selector: `a`, `button`, `input`, `select`, `textarea`, `video`, `audio`, `summary`, `[role="button"]`, any `[contenteditable]` not set to `"false"`, or anything under `[data-prezzer-interactive]` — browser shortcuts and embedded interactive demos keep working. Mark custom demo surfaces (canvas playgrounds, ARIA widgets) with `data-prezzer-interactive` to keep the deck's hands off them; the same guard applies to touch. Holding a toggle key (`f`/`n`/`g`/`d`/`a`) fires once, not per key-repeat. Page up/down means presenter clickers work unconfigured.
@@ -87,6 +88,10 @@ Shortcuts are skipped when `meta`, `ctrl`, or `alt` is held (`shift` stays live 
 Grid and help are exclusive modals (opening one closes the other); speaker notes are an independent pinned panel that stays open across them. While either modal is open, only escape and the modal toggles act — stray deck keys (space, arrows, page keys, digits, `f`/`n`/`d`/`a`) are swallowed instead of mutating the deck behind the dialog. While the grid is open it owns the keyboard: arrows move focus across slide cards (up/down by visual row), typing digits builds a slide number shown in the hint line (`enter` jumps, the buffer clears after 1.5s), and `home`/`end` move focus to the first/last card instead of moving the deck.
 
 Touch shares the exact same ordering guarantees: horizontal swipes past 50px navigate, taps on the outer 20% screen edges step back/forward, and center taps advance. **Every forward gesture — left swipe, right-edge tap, center tap — starts a pending widget before it advances the deck**; backward gestures never do. Taps must be under 300ms with less than 10px of movement, touches starting inside the guard selector above are ignored, multi-finger gestures (pinch/zoom) never navigate, and touch navigation is disabled entirely while the grid or notes overlay is open.
+
+## Presenter view
+
+`p` opens the same artifact in a second window with `?presenter`: a console showing the current slide's notes large, live current and next slide previews, beat/deny position, a click-to-reset elapsed timer, and a clock. The audience window owns the navigation truth — every key pressed in the presenter (space, arrows, shift-jumps, digits, `d`, `a`) is forwarded there as a command, and state streams back over `postMessage` through the `window.open` pair, which works from `file://` where BroadcastChannel does not. The presenter re-introduces itself on a two-second heartbeat, so a reloaded audience window re-adopts it automatically; `p` in the audience refocuses the existing console. Slide components render inside the previews through a frozen deck context, so `useBeat()`/`useDenyMode()` reflect the previewed position, while imperative widgets stay idle there.
 
 ## Hash deep links
 

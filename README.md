@@ -58,6 +58,7 @@ A Prezzer deck is real software. It lives in its own repository, renders with re
 - ⚡ **Bun-native end to end** — one runtime for the dev server, Tailwind, TypeScript, tests, and the build
 - 📦 **One-file offline artifact** — `prezzer build` bakes markup, styles, scripts, images, and self-hosted fonts into a single HTML file
 - 🎭 **Presenter chrome built in** — speaker notes, grid overview, shortcut help, act-aware progress rail, and honest rollout badges
+- 🖥️ **Presenter view** — press `p` for a second window with notes, next-slide preview, and a timer; the one HTML file plays both roles, even from `file://`
 - 💫 **Eight slide transitions** — `portal`, `glitch`, `zoom`, `rise`, `spiral`, `morph`, `split`, and `slide`, chosen per slide
 - 🔗 **Hash deep links** — `#4.2` reopens slide four mid-reveal; refresh resumes exactly where you were
 - 🧨 **Deny mode** — one keypress flips slides that read `useDenyMode()` into their authored failure-path variant, made for live security demos
@@ -145,6 +146,7 @@ export function Talk() {
 | `d`                  | deny mode for failure-path demos    |
 | `a`                  | fire the autoplay signal to widgets |
 | `?`                  | shortcut help overlay               |
+| `p`                  | presenter window with notes + timer |
 
 Page up and page down mean presenter clickers work out of the box.
 

@@ -72,27 +72,56 @@ async function collectFiles(directory: string): Promise<string[]> {
   }
 }
 
+const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
 async function inlinePublicAssets(html: string): Promise<{ html: string; unreferenced: string[] }> {
   const publicRoot = resolve('public')
   const files = await collectFiles(publicRoot)
   const unreferenced: string[] = []
+  const replacements = new Map<string, string>()
 
   for (const path of files) {
     const assetPath = `/${relative(publicRoot, path).replaceAll('\\', '/')}`
-    if (!html.includes(assetPath)) {
-      if (!bundlerResolvedAssets.has(path)) unreferenced.push(assetPath)
+    const tokens = new Set([assetPath, encodeURI(assetPath)])
+    const matched = [...tokens].filter((token) => html.includes(token))
+    if (matched.length === 0) {
+      const hidden = basename(path).startsWith('.')
+      if (!bundlerResolvedAssets.has(path) && !hidden) unreferenced.push(assetPath)
       continue
     }
 
     const file = Bun.file(path)
-    const base64 = Buffer.from(await file.arrayBuffer()).toString('base64')
-    html = html.replaceAll(
-      assetPath,
-      `data:${file.type || 'application/octet-stream'};base64,${base64}`
+    const dataUri = `data:${file.type || 'application/octet-stream'};base64,${(
+      await file.bytes()
+    ).toBase64()}`
+    for (const token of matched) replacements.set(token, dataUri)
+  }
+
+  if (replacements.size > 0) {
+    // One pass, longest token first: /a.png must never rewrite the middle
+    // of /a.png.license, and inserted base64 must never be rescanned. A
+    // query suffix would corrupt a data URI, so it is consumed with the path.
+    const alternation = [...replacements.keys()]
+      .sort((a, b) => b.length - a.length)
+      .map((token) => escapeRegExp(token))
+      .join('|')
+    html = html.replace(
+      new RegExp(`(${alternation})(\\?[\\w.%=&~-]*)?`, 'g'),
+      (_match, token: string) => replacements.get(token) as string
     )
   }
 
   return { html, unreferenced }
+}
+
+/** remote stylesheets, scripts, or CSS-loaded assets that keep the artifact network-dependent */
+function hasRemoteReferences(html: string): boolean {
+  if (/url\(\s*["']?https?:\/\//i.test(html)) return true
+  if (/<script[^>]*\ssrc\s*=\s*["']https?:\/\//i.test(html)) return true
+  const links = html.matchAll(/<link\b[^>]*>/gi)
+  return [...links].some(
+    (tag) => /rel\s*=\s*["']?stylesheet/i.test(tag[0]) && /href\s*=\s*["']https?:\/\//i.test(tag[0])
+  )
 }
 
 function isWithin(parent: string, child: string) {
@@ -267,7 +296,11 @@ async function build(args: string[]) {
 
     const stagedOutputPath = resolve(stagingDirectory, basename(entryPath))
     const standalone = result.outputs.find((output) => output.path === stagedOutputPath)
-    if (!standalone) fail('Bun did not emit the standalone deck')
+    if (!standalone) {
+      console.error(`${red}error${reset} Bun did not emit the standalone deck`)
+      process.exitCode = 1
+      return
+    }
 
     const { html, unreferenced } = await inlinePublicAssets(await standalone.text())
     await mkdir(outputDirectory, { recursive: true })
@@ -279,10 +312,18 @@ async function build(args: string[]) {
       )
     }
 
+    const remote = hasRemoteReferences(html)
+    if (remote) {
+      console.warn(
+        `${yellow}⚠${reset} ${muted}the artifact still loads remote stylesheets, scripts, or fonts — offline shows fallbacks; self-host to bake full fidelity${reset}`
+      )
+    }
+
     const elapsed = formatDuration(performance.now() - startedAt)
     const displayPath = relative(process.cwd(), outputPath) || outputPath
+    const tagline = remote ? 'one file, network fallbacks noted above' : 'one file, works offline'
     console.log(
-      `${green}✓${reset} ${cyan}${displayPath}${reset} ${muted}·${reset} ${coral}${formatSize(bytes)}${reset} ${muted}·${reset} ${coral}${elapsed}${reset} ${muted}· one file, works offline${reset}`
+      `${green}✓${reset} ${cyan}${displayPath}${reset} ${muted}·${reset} ${coral}${formatSize(bytes)}${reset} ${muted}·${reset} ${coral}${elapsed}${reset} ${muted}· ${tagline}${reset}`
     )
   } finally {
     await rm(stagingDirectory, { recursive: true, force: true })

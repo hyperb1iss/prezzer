@@ -42,6 +42,111 @@ describe('prezzer build', () => {
     expect(html).toContain('data:image/svg+xml;base64,')
   })
 
+  test('inlines overlapping asset paths without corrupting the longer one', async () => {
+    const project = await mkdtemp(resolve(tmpdir(), 'prezzer-build-test-'))
+    created.push(project)
+    await mkdir(resolve(project, 'public'))
+    await writeFile(
+      resolve(project, 'index.html'),
+      '<body><script type="module" src="./main.ts"></script></body>'
+    )
+    await writeFile(
+      resolve(project, 'main.ts'),
+      'document.body.innerHTML = `<img src="/a.png" alt="a"><a href="/a.png.license">license</a>`'
+    )
+    await writeFile(resolve(project, 'public/a.png'), 'not-really-a-png')
+    await writeFile(resolve(project, 'public/a.png.license'), 'MIT')
+
+    const process = Bun.spawn(
+      ['bun', resolve(import.meta.dir, '../packages/engine/bin/prezzer.ts'), 'build'],
+      { cwd: project, stdout: 'pipe', stderr: 'pipe' }
+    )
+
+    expect(await process.exited).toBe(0)
+    const html = await Bun.file(resolve(project, 'dist/index.html')).text()
+    expect(html).not.toContain('/a.png')
+    expect(html).not.toContain('.license`')
+    expect(html).toContain(
+      `data:image/png;base64,${Buffer.from('not-really-a-png').toString('base64')}`
+    )
+    expect(html).toContain(Buffer.from('MIT').toString('base64'))
+  })
+
+  test('consumes query strings instead of appending them to data URIs', async () => {
+    const project = await mkdtemp(resolve(tmpdir(), 'prezzer-build-test-'))
+    created.push(project)
+    await mkdir(resolve(project, 'public'))
+    await writeFile(
+      resolve(project, 'index.html'),
+      '<body><script type="module" src="./main.ts"></script></body>'
+    )
+    await writeFile(
+      resolve(project, 'main.ts'),
+      'document.body.innerHTML = `<img src="/pixel.svg?v=2" alt="pixel">`'
+    )
+    await writeFile(
+      resolve(project, 'public/pixel.svg'),
+      '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>'
+    )
+
+    const process = Bun.spawn(
+      ['bun', resolve(import.meta.dir, '../packages/engine/bin/prezzer.ts'), 'build'],
+      { cwd: project, stdout: 'pipe', stderr: 'pipe' }
+    )
+
+    expect(await process.exited).toBe(0)
+    const html = await Bun.file(resolve(project, 'dist/index.html')).text()
+    expect(html).toContain('data:image/svg+xml;base64,')
+    expect(html).not.toContain('?v=2')
+  })
+
+  test('matches URL-encoded references and skips dotfile warnings', async () => {
+    const project = await mkdtemp(resolve(tmpdir(), 'prezzer-build-test-'))
+    created.push(project)
+    await mkdir(resolve(project, 'public'))
+    await writeFile(
+      resolve(project, 'index.html'),
+      '<body><img src="/my%20file.png" alt="spaced"><script type="module" src="./main.ts"></script></body>'
+    )
+    await writeFile(resolve(project, 'main.ts'), 'export {}')
+    await writeFile(resolve(project, 'public/my file.png'), 'spaced-bytes')
+    await writeFile(resolve(project, 'public/.DS_Store'), 'junk')
+
+    const process = Bun.spawn(
+      ['bun', resolve(import.meta.dir, '../packages/engine/bin/prezzer.ts'), 'build'],
+      { cwd: project, stdout: 'pipe', stderr: 'pipe' }
+    )
+
+    expect(await process.exited).toBe(0)
+    const stderr = await new Response(process.stderr).text()
+    expect(stderr).not.toContain('my file.png')
+    expect(stderr).not.toContain('.DS_Store')
+    const html = await Bun.file(resolve(project, 'dist/index.html')).text()
+    expect(html).not.toContain('/my%20file.png')
+    expect(html).toContain(
+      `data:image/png;base64,${Buffer.from('spaced-bytes').toString('base64')}`
+    )
+  })
+
+  test('warns when remote stylesheets keep the artifact network-dependent', async () => {
+    const project = await mkdtemp(resolve(tmpdir(), 'prezzer-build-test-'))
+    created.push(project)
+    await writeFile(
+      resolve(project, 'index.html'),
+      '<head><link rel="stylesheet" href="https://fonts.example.com/css"></head><body><script type="module" src="./main.ts"></script></body>'
+    )
+    await writeFile(resolve(project, 'main.ts'), 'export {}')
+
+    const process = Bun.spawn(
+      ['bun', resolve(import.meta.dir, '../packages/engine/bin/prezzer.ts'), 'build'],
+      { cwd: project, stdout: 'pipe', stderr: 'pipe' }
+    )
+
+    expect(await process.exited).toBe(0)
+    expect(await new Response(process.stderr).text()).toContain('remote stylesheets')
+    expect(await new Response(process.stdout).text()).toContain('network fallbacks')
+  })
+
   test('builds browser code for production', async () => {
     const project = await mkdtemp(resolve(tmpdir(), 'prezzer-build-test-'))
     created.push(project)

@@ -22,10 +22,21 @@ const prezzerPlugin: BunPlugin = {
       const projectPath = path.startsWith(process.cwd())
         ? relative(process.cwd(), path)
         : path.slice(1)
-      const publicPath = resolve('public', projectPath)
-      if (!(await Bun.file(publicPath).exists())) return undefined
-      bundlerResolvedAssets.add(publicPath)
-      return { path: publicPath }
+      const candidates = [projectPath]
+      try {
+        const decoded = decodeURIComponent(projectPath)
+        if (decoded !== projectPath) candidates.push(decoded)
+      } catch {
+        // a bare % that is not an escape sequence; the raw form already covers it
+      }
+      for (const candidate of candidates) {
+        const publicPath = resolve('public', candidate)
+        if (await Bun.file(publicPath).exists()) {
+          bundlerResolvedAssets.add(publicPath)
+          return { path: publicPath }
+        }
+      }
+      return undefined
     })
   },
 }

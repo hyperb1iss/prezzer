@@ -1,3 +1,4 @@
+import { MotionGlobalConfig } from 'motion/react'
 import { RolloutBadge } from '../chrome/RolloutBadge'
 import { silkCircuit, type Theme, themeToCssVars, withAlpha } from '../theme/tokens'
 import { type ActDef, resolveSlide, type SlideDef } from '../types'
@@ -12,6 +13,15 @@ export interface PrintViewProps {
 
 export function isPrintWindow(): boolean {
   return typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('print')
+}
+
+// Entrance animations must land at their targets on paper, and the flag has
+// to be set before any motion component mounts, so it flips at module load
+// for pages opened with ?print. Accepted residue: a host page that strips
+// ?print via history.replaceState without reloading keeps animations
+// skipped until reload.
+if (isPrintWindow()) {
+  MotionGlobalConfig.skipAnimations = true
 }
 
 /**

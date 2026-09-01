@@ -95,7 +95,7 @@ Touch shares the exact same ordering guarantees: horizontal swipes past 50px nav
 
 ## Print and PDF export
 
-Open the artifact with `?print` to render every slide as one fully revealed 16:9 page (each page is the design canvas; `@page` rules match it), with animations globally skipped so entrance states land at their targets. The browser's print dialog is the PDF exporter — no headless dependency. The on-screen view shrinks the pages for preview; printed output is exact. Widgets render in their initial state, so decks with live demos get the demo's resting frame on the page.
+Open the artifact with `?print` to render every slide as one fully revealed 16:9 page (each page is the design canvas; `@page` rules match it), with animations globally skipped so entrance states land at their targets. The browser's print dialog is the PDF exporter — no headless dependency (Chromium-family browsers honor the `@page` size exactly; Firefox ignores `@page size` and letterboxes into its paper size). The on-screen view shrinks the pages for preview; printed output is exact. Widgets render in their initial state, so decks with live demos get the demo's resting frame on the page.
 
 ## Hash deep links
 

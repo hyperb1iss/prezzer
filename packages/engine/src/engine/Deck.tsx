@@ -1,4 +1,4 @@
-import { AnimatePresence, MotionConfig, MotionGlobalConfig } from 'motion/react'
+import { AnimatePresence, MotionConfig } from 'motion/react'
 import { type ReactNode, useCallback, useState } from 'react'
 import { GridOverview } from '../chrome/GridOverview'
 import { ProgressRail } from '../chrome/ProgressRail'
@@ -195,10 +195,9 @@ export function Deck({
   showProgressRail = true,
   showScanlines = true,
 }: DeckProps) {
-  // ?print renders every slide as one fully revealed 16:9 page, with
-  // animations globally skipped so entrance states land at their targets.
+  // ?print renders every slide as one fully revealed 16:9 page; PrintView's
+  // module scope already skipped animations globally for this window.
   if (isPrintWindow()) {
-    MotionGlobalConfig.skipAnimations = true
     return <PrintView slides={slides} acts={acts} theme={theme} />
   }
   // The presenter window is this same artifact opened with ?presenter: it

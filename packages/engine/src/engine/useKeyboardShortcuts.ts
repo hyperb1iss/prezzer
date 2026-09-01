@@ -14,6 +14,8 @@ export interface UseKeyboardShortcutsOptions {
   onToggleNotes?: () => void
   onToggleGrid?: () => void
   onToggleHelp?: () => void
+  /** Open (or focus) the presenter window */
+  onOpenPresenter?: () => void
   /** Returns true if an overlay consumed the Escape */
   onEscape?: () => boolean
   /** While a modal overlay is open, only dismissal/swap keys may act */
@@ -32,6 +34,7 @@ export function useKeyboardShortcuts({
   onToggleNotes,
   onToggleGrid,
   onToggleHelp,
+  onOpenPresenter,
   onEscape,
   modalOpen = false,
   onAdvanceIntercept,
@@ -44,7 +47,7 @@ export function useKeyboardShortcuts({
     if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return
 
     // A held toggle key must not strobe fullscreen/notes/grid/deny/autoplay.
-    if (event.repeat && /^[fngda?]$/i.test(event.key)) return
+    if (event.repeat && /^[fngdap?]$/i.test(event.key)) return
 
     const target = event.target
     if (target instanceof Element && target.closest(interactiveElementSelector)) {
@@ -135,6 +138,14 @@ export function useKeyboardShortcuts({
         if (onToggleHelp) {
           event.preventDefault()
           onToggleHelp()
+        }
+        break
+
+      case 'p':
+      case 'P':
+        if (onOpenPresenter) {
+          event.preventDefault()
+          onOpenPresenter()
         }
         break
 

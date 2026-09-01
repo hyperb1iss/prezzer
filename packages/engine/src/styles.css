@@ -515,3 +515,119 @@
     transform: none;
   }
 }
+
+/* Presenter console: the ?presenter window. Unscaled, real pixels. */
+
+.prezzer-presenter {
+  display: flex;
+  min-height: 100vh;
+  padding: 20px 28px;
+  flex-direction: column;
+  gap: 20px;
+  background: var(--prezzer-color-background, #0a0a12);
+  font-family: var(--prezzer-font-mono, monospace);
+}
+
+.prezzer-presenter-header {
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+}
+
+.prezzer-presenter-header > :first-child {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+.prezzer-presenter-connection {
+  font-size: 13px;
+}
+
+.prezzer-presenter-timer {
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 26px;
+  font-variant-numeric: tabular-nums;
+}
+
+.prezzer-presenter-body {
+  display: flex;
+  flex: 1;
+  gap: 28px;
+  min-height: 0;
+}
+
+.prezzer-presenter-notes {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+}
+
+.prezzer-presenter-notes h1 {
+  margin: 0 0 20px;
+  font-family: var(--prezzer-font-display, sans-serif);
+  font-size: 34px;
+  letter-spacing: -0.01em;
+}
+
+.prezzer-presenter-notes ul {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  flex-direction: column;
+  gap: 14px;
+  font-family: var(--prezzer-font-body, sans-serif);
+  font-size: 24px;
+  line-height: 1.5;
+  list-style: none;
+}
+
+.prezzer-presenter-next-title {
+  margin: 28px 0 0;
+  font-size: 15px;
+  letter-spacing: 0.06em;
+}
+
+.prezzer-presenter-previews {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.prezzer-presenter-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.prezzer-presenter-label {
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.prezzer-presenter-frame {
+  position: relative;
+  border: 1px solid;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.prezzer-presenter-frame-end {
+  display: grid;
+  height: 100%;
+  place-items: center;
+  font-size: 14px;
+  letter-spacing: 0.12em;
+}
+
+.prezzer-presenter-footer {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+}

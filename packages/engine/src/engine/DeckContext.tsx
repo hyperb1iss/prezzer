@@ -16,7 +16,7 @@ interface NavState {
   direction: number
 }
 
-interface DeckContextValue extends NavState {
+export interface DeckContextValue extends NavState {
   slides: readonly ResolvedSlideDef[]
   acts: readonly ActDef[]
   theme: Theme
@@ -33,6 +33,65 @@ interface DeckContextValue extends NavState {
 }
 
 const DeckContext = createContext<DeckContextValue | null>(null)
+
+/**
+ * Internal composition surface for engine shells that source their state
+ * from somewhere other than DeckProvider (the presenter window, print
+ * rendering). Deck authors use DeckProvider.
+ */
+export { DeckContext }
+
+const noop = () => {}
+
+export interface StaticDeckProviderProps {
+  slides: readonly SlideDef[]
+  acts?: readonly ActDef[] | undefined
+  theme?: Theme | undefined
+  slideIndex: number
+  beat: number
+  denyMode?: boolean | undefined
+  children: ReactNode
+}
+
+/**
+ * A frozen deck context: fixed position, inert actions. Backs previews and
+ * print rendering, where slides must render at a position without owning
+ * navigation.
+ */
+export function StaticDeckProvider({
+  slides: defs,
+  acts,
+  theme = silkCircuit,
+  slideIndex,
+  beat,
+  denyMode = false,
+  children,
+}: StaticDeckProviderProps) {
+  const slides = useMemo(() => defs.map(resolveSlide), [defs])
+  const resolvedActs = useMemo(() => acts ?? deriveActs(slides, theme), [acts, slides, theme])
+  const value = useMemo<DeckContextValue>(
+    () => ({
+      slideIndex,
+      beat,
+      direction: 0,
+      slides,
+      acts: resolvedActs,
+      theme,
+      totalSlides: slides.length,
+      denyMode,
+      autoplaySignal: 0,
+      next: noop,
+      prev: noop,
+      nextSlide: noop,
+      prevSlide: noop,
+      goToSlide: noop,
+      toggleDeny: noop,
+      fireAutoplay: noop,
+    }),
+    [slideIndex, beat, slides, resolvedActs, theme, denyMode]
+  )
+  return <DeckContext.Provider value={value}>{children}</DeckContext.Provider>
+}
 
 function parseHash(slides: readonly ResolvedSlideDef[]): NavState {
   if (typeof window === 'undefined' || slides.length === 0) {

@@ -18,6 +18,7 @@ const shortcuts: readonly [string, string][] = [
   ['f', 'fullscreen'],
   ['d', 'deny mode'],
   ['a', 'autoplay signal'],
+  ['p', 'presenter window'],
   ['?', 'this overlay'],
   ['esc', 'close overlays, exit fullscreen'],
 ]

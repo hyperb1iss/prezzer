@@ -50,7 +50,9 @@ no frontmatter needed; title comes from the first heading.
 - A slide may open with a frontmatter block of `key: value` lines closed by another `---`; a leading block belongs to the first slide. Keys: `id`, `title`, `act`, `transition`, `deep`, `badge`, and `notes` (a `- item` list).
 - `<!-- beat -->` on its own line splits the slide into reveal chunks. **The beat count derives from the markers** — a frontmatter `beats:` is ignored, so markdown slides can never drift the way hand-declared counts can.
 - Defaults: `id` is positional (`S3`), `title` is the first heading's text.
-- An unknown `transition` warns at build time and falls back to the default; because `---` is the slide separator, use `***` for a horizontal rule inside a slide.
+- Dividers and beat markers inside code fences (``` or ~~~) are content, never boundaries, so YAML/diff/HTML examples are safe.
+- Frontmatter accepts only the known keys; a block containing any other `key:`-looking line is treated as slide content, so a paragraph starting `warning: ...` cannot eat a slide.
+- An unknown `transition` or non-numeric `act` warns at build time and falls back; because a bare `---` line separates slides, use `***` for a horizontal rule and prefer `#` headings over setext (`Title` + `---`) style.
 
 ## Rendering
 

@@ -5,13 +5,27 @@ import { parseMarkdownDeck } from './markdown-loader'
 const peerDependency = /^(?:motion|react|react-dom)(?:\/.*)?$/
 
 // The emitted markdown module must import the runtime factory from wherever
-// it actually lives: the published package for a consumer deck, the source
-// tree when the plugin runs inside this repo.
-function resolveMarkdownRuntime(importerDirectory: string): string {
+// it actually lives. Package resolution comes first so a deck's markdown
+// runtime shares module identity with its other prezzer imports, but a hit
+// in Bun's global install cache is rejected (Bun auto-installs published
+// releases to answer bare-directory resolution, and a cache copy is both
+// stale and unable to resolve its own transitive imports). The source tree
+// is the fallback for this repo's own tests and examples-before-build.
+async function resolveMarkdownRuntime(importerDirectory: string): Promise<string> {
   try {
-    return Bun.resolveSync('prezzer/markdown', importerDirectory)
+    const resolved = Bun.resolveSync('prezzer/markdown', importerDirectory)
+    if (!resolved.includes('/install/cache/') && (await Bun.file(resolved).exists())) {
+      return resolved
+    }
   } catch {
+    // fall through to the source layout
+  }
+  try {
     return Bun.resolveSync('./src/markdown/index.tsx', import.meta.dir)
+  } catch {
+    throw new Error(
+      '[prezzer] cannot locate the markdown runtime (prezzer/markdown) — install prezzer in the deck project'
+    )
   }
 }
 
@@ -65,7 +79,7 @@ const prezzerPlugin: BunPlugin = {
     // chunks to the runtime factory.
     builder.onLoad({ filter: /\.md$/ }, async ({ path }) => {
       const slides = parseMarkdownDeck(await Bun.file(path).text())
-      const runtime = resolveMarkdownRuntime(dirname(path))
+      const runtime = await resolveMarkdownRuntime(dirname(path))
       return {
         contents: [
           `import { markdownSlides } from ${JSON.stringify(runtime)}`,

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useSyncExternalStore } from 'react'
 
 interface UseFullscreenReturn {
   isFullscreen: boolean
@@ -7,8 +7,34 @@ interface UseFullscreenReturn {
   exitFullscreen: () => void
 }
 
-export function useFullscreen(elementRef?: React.RefObject<HTMLElement>): UseFullscreenReturn {
-  const [isFullscreen, setIsFullscreen] = useState(false)
+function subscribeToFullscreen(onChange: () => void): () => void {
+  document.addEventListener('fullscreenchange', onChange)
+  document.addEventListener('webkitfullscreenchange', onChange)
+  return () => {
+    document.removeEventListener('fullscreenchange', onChange)
+    document.removeEventListener('webkitfullscreenchange', onChange)
+  }
+}
+
+function readFullscreenState(): boolean {
+  return !!(
+    document.fullscreenElement ??
+    (document as Document & { webkitFullscreenElement?: Element }).webkitFullscreenElement
+  )
+}
+
+const serverFullscreenState = () => false
+
+export function useFullscreen(
+  elementRef?: React.RefObject<HTMLElement | null>
+): UseFullscreenReturn {
+  // An external store read means a deck mounted while already fullscreen
+  // (HMR remount, embedded host) reports the real state from the start.
+  const isFullscreen = useSyncExternalStore(
+    subscribeToFullscreen,
+    readFullscreenState,
+    serverFullscreenState
+  )
 
   const getElement = useCallback((): HTMLElement => {
     return elementRef?.current ?? document.documentElement
@@ -52,30 +78,12 @@ export function useFullscreen(elementRef?: React.RefObject<HTMLElement>): UseFul
   }, [])
 
   const toggleFullscreen = useCallback(() => {
-    if (isFullscreen) {
+    if (readFullscreenState()) {
       exitFullscreen()
     } else {
       enterFullscreen()
     }
-  }, [isFullscreen, enterFullscreen, exitFullscreen])
-
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      const fullscreenElement =
-        document.fullscreenElement ??
-        (document as Document & { webkitFullscreenElement?: Element }).webkitFullscreenElement
-
-      setIsFullscreen(!!fullscreenElement)
-    }
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange)
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange)
-
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange)
-      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange)
-    }
-  }, [])
+  }, [enterFullscreen, exitFullscreen])
 
   return {
     isFullscreen,

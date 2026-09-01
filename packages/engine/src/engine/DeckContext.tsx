@@ -72,6 +72,8 @@ export interface DeckProviderProps {
   /** Act labels/colors for the rail and grid; derived from slides when omitted */
   acts?: readonly ActDef[]
   theme?: Theme
+  /** Mirror position into location.hash; disable when embedding the deck in a host page */
+  hashSync?: boolean
   children: ReactNode
 }
 
@@ -79,23 +81,28 @@ export function DeckProvider({
   slides: defs,
   acts,
   theme = silkCircuit,
+  hashSync = true,
   children,
 }: DeckProviderProps) {
   const slides = useMemo(() => defs.map(resolveSlide), [defs])
   const resolvedActs = useMemo(() => acts ?? deriveActs(slides, theme), [acts, slides, theme])
 
-  const [nav, setNav] = useState<NavState>(() => parseHash(slides))
+  const [nav, setNav] = useState<NavState>(() =>
+    hashSync ? parseHash(slides) : { slideIndex: 0, beat: 0, direction: 0 }
+  )
   const [denyMode, setDenyMode] = useState(false)
   const [autoplaySignal, setAutoplaySignal] = useState(0)
 
-  // URL hash mirrors position so refresh resumes mid-deck
+  // URL hash mirrors position so refresh resumes mid-deck. replaceState
+  // keeps that without pushing a history entry per beat — the browser
+  // Back button must leave the page, not unwind the whole talk.
   useEffect(() => {
-    if (slides.length === 0) return
+    if (!hashSync || slides.length === 0) return
     const hash = formatHash(nav)
     if (window.location.hash.slice(1) !== hash) {
-      window.location.hash = hash
+      history.replaceState(null, '', `#${hash}`)
     }
-  }, [nav, slides.length])
+  }, [nav, slides.length, hashSync])
 
   useEffect(() => {
     setNav((current) => {
@@ -114,16 +121,23 @@ export function DeckProvider({
   }, [slides])
 
   useEffect(() => {
+    if (!hashSync) return
     const handleHashChange = () => {
+      const parsed = parseHash(slides)
+      // A hand-typed hash that parses beyond the deck clamps; rewrite the
+      // URL to the position actually shown so refresh stays truthful.
+      const canonical = formatHash(parsed)
+      if (window.location.hash.slice(1) !== canonical) {
+        history.replaceState(null, '', `#${canonical}`)
+      }
       setNav((prev) => {
-        const parsed = parseHash(slides)
         if (parsed.slideIndex === prev.slideIndex && parsed.beat === prev.beat) return prev
         return { ...parsed, direction: parsed.slideIndex >= prev.slideIndex ? 1 : -1 }
       })
     }
     window.addEventListener('hashchange', handleHashChange)
     return () => window.removeEventListener('hashchange', handleHashChange)
-  }, [slides])
+  }, [slides, hashSync])
 
   // Deny-variant is a per-slide mode
   // biome-ignore lint/correctness/useExhaustiveDependencies: reset keyed on slide change

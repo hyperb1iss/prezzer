@@ -19,6 +19,8 @@ export interface DeckProps {
   slides: readonly SlideDef[]
   acts?: readonly ActDef[]
   theme?: Theme
+  /** Mirror position into location.hash; disable when embedding the deck in a host page */
+  hashSync?: boolean
   /** Design canvas dimensions; 16:9 projector default */
   designWidth?: number
   designHeight?: number
@@ -78,7 +80,9 @@ function DeckShell({
     if (!startNextWidget()) next()
   }, [next, startNextWidget])
 
-  useTouchNavigation({ onNext: advance, onPrev: prev })
+  // The overlays own the screen while open: a tap that closes the grid
+  // must not also step the deck behind it.
+  useTouchNavigation({ onNext: advance, onPrev: prev, enabled: !gridOpen && !notesOpen })
 
   const def = slides[slideIndex]
   if (!def) {
@@ -149,6 +153,7 @@ export function Deck({
   slides,
   acts,
   theme,
+  hashSync,
   designWidth = 1920,
   designHeight = 1080,
   minScale,
@@ -159,7 +164,7 @@ export function Deck({
 }: DeckProps) {
   return (
     <MotionConfig reducedMotion="user">
-      <DeckProvider slides={slides} acts={acts} theme={theme}>
+      <DeckProvider slides={slides} acts={acts} theme={theme} hashSync={hashSync}>
         <SlideWidgetProvider>
           <DeckShell
             designWidth={designWidth}

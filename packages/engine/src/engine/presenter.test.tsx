@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, test } from 'bun:test'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { useImperativeHandle, useRef, useState } from 'react'
 import type { SlideDef } from '../types'
+import type { DeckWidgetHandle } from '../widgets/registry'
+import { useWidgetRegistration } from '../widgets/registry'
 import { Deck } from './Deck'
 import type { PresenterMessage } from './presenterBridge'
 import { PresenterView } from './PresenterView'
@@ -112,6 +115,23 @@ describe('PresenterView', () => {
   })
 })
 
+function RemoteWidget() {
+  const ref = useWidgetRegistration()
+  const startedRef = useRef(false)
+  const [started, setStarted] = useState(false)
+  useImperativeHandle(
+    ref,
+    (): DeckWidgetHandle => ({
+      start: () => {
+        startedRef.current = true
+        setStarted(true)
+      },
+      isStarted: () => startedRef.current,
+    })
+  )
+  return <p>{started ? 'widget started' : 'widget idle'}</p>
+}
+
 describe('presenter audience', () => {
   test('answers a hello with state and applies commands from that window', async () => {
     render(<Deck slides={slides} showProgressRail={false} />)
@@ -142,6 +162,69 @@ describe('presenter audience', () => {
         message.prezzer === 'state'
     )
     expect(states.at(-1)?.nav.slideIndex).toBe(1)
+  })
+
+  test('remote advance starts a pending widget before the deck moves', async () => {
+    render(
+      <Deck
+        slides={[
+          { id: 'W1', title: 'widget slide', component: RemoteWidget, beats: 2 },
+          { id: 'W2', title: 'after', component: NoteSlide },
+        ]}
+        showProgressRail={false}
+      />
+    )
+    await waitFor(() => expect(window.location.hash).toBe('#1'))
+    expect(screen.getByText('widget idle')).toBeTruthy()
+
+    const presenter = fakeWindow()
+    window.dispatchEvent(
+      new MessageEvent('message', {
+        data: { prezzer: 'hello' } satisfies PresenterMessage,
+        source: presenter as never,
+      })
+    )
+    await waitFor(() => expect(presenter.posted.some((m) => m.prezzer === 'state')).toBe(true))
+
+    window.dispatchEvent(
+      new MessageEvent('message', {
+        data: { prezzer: 'command', action: 'next' } satisfies PresenterMessage,
+        source: presenter as never,
+      })
+    )
+
+    await waitFor(() => expect(screen.getByText('widget started')).toBeTruthy())
+    expect(window.location.hash).toBe('#1')
+  })
+
+  test('drops malformed commands without poisoning navigation', async () => {
+    render(<Deck slides={slides} showProgressRail={false} />)
+    await waitFor(() => expect(window.location.hash).toBe('#1'))
+
+    const presenter = fakeWindow()
+    window.dispatchEvent(
+      new MessageEvent('message', {
+        data: { prezzer: 'hello' } satisfies PresenterMessage,
+        source: presenter as never,
+      })
+    )
+    await waitFor(() => expect(presenter.posted.some((m) => m.prezzer === 'state')).toBe(true))
+
+    window.dispatchEvent(
+      new MessageEvent('message', {
+        data: { prezzer: 'command', action: 'goToSlide' } as never,
+        source: presenter as never,
+      })
+    )
+    window.dispatchEvent(
+      new MessageEvent('message', {
+        data: { prezzer: 'command', action: 'detonate' } as never,
+        source: presenter as never,
+      })
+    )
+
+    expect(window.location.hash).toBe('#1')
+    expect(screen.getByRole('region', { name: 'opening' })).toBeTruthy()
   })
 
   test('ignores commands from windows it never adopted', async () => {

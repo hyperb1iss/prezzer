@@ -62,8 +62,6 @@ function DeckShell({
     setModal((current) => (current === which ? null : which))
   }, [])
 
-  const { openPresenter } = usePresenterAudience()
-
   const handleEscape = useCallback((): boolean => {
     if (modal) {
       setModal(null)
@@ -80,6 +78,12 @@ function DeckShell({
     return false
   }, [modal, notesOpen, isFullscreen, exitFullscreen])
 
+  const advance = useCallback(() => {
+    if (!startNextWidget()) next()
+  }, [next, startNextWidget])
+
+  const { openPresenter } = usePresenterAudience({ advance })
+
   useKeyboardShortcuts({
     onToggleFullscreen: toggleFullscreen,
     onToggleNotes: () => setNotesOpen((open) => !open),
@@ -90,10 +94,6 @@ function DeckShell({
     modalOpen: modal !== null,
     onAdvanceIntercept: startNextWidget,
   })
-
-  const advance = useCallback(() => {
-    if (!startNextWidget()) next()
-  }, [next, startNextWidget])
 
   const overlayOpen = modal !== null || notesOpen
 

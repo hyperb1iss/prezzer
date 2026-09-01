@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { silkCircuit, type Theme, themeToCssVars, withAlpha } from '../theme/tokens'
 import { type ActDef, resolveSlide, type SlideDef } from '../types'
 import { SlideWidgetProvider } from '../widgets/registry'
@@ -114,17 +114,15 @@ export function PresenterView({ slides: defs, acts, theme = silkCircuit }: Prese
   const [startedAt, setStartedAt] = useState(() => Date.now())
   const [now, setNow] = useState(() => Date.now())
 
-  const connectedRef = useRef(false)
-  connectedRef.current = connected
-
   const audience = typeof window !== 'undefined' ? window.opener : null
 
-  // Introduce this window until the audience answers with state; the retry
-  // also survives the audience window being slow to mount its listener.
+  // Introduce this window on a steady heartbeat, not just until first
+  // sync: a reloaded audience window forgets its adopted presenter, and
+  // the next hello re-adopts this one within two seconds.
   useEffect(() => {
     if (!audience) return
     const hello = () => {
-      if (!connectedRef.current) audience.postMessage({ prezzer: 'hello' }, '*')
+      if (!audience.closed) audience.postMessage({ prezzer: 'hello' }, '*')
     }
     hello()
     const interval = setInterval(hello, 2000)
@@ -194,7 +192,7 @@ export function PresenterView({ slides: defs, acts, theme = silkCircuit }: Prese
             {connected ? '● synced' : '○ waiting for the deck window'}
           </span>
           <span style={{ color: theme.colors.textPrimary }}>
-            slide {nav.slideIndex + 1}/{slides.length}
+            {slides.length === 0 ? 'empty deck' : `slide ${nav.slideIndex + 1}/${slides.length}`}
             {current && current.beats > 1 && ` · beat ${nav.beat + 1}/${current.beats}`}
             {denyMode && ' · DENY'}
           </span>
@@ -202,7 +200,11 @@ export function PresenterView({ slides: defs, acts, theme = silkCircuit }: Prese
             type="button"
             className="prezzer-presenter-timer"
             style={{ color: theme.colors.coral }}
-            onClick={() => setStartedAt(Date.now())}
+            onClick={(event) => {
+              setStartedAt(Date.now())
+              // Keep the spacebar with the deck, not the focused button.
+              event.currentTarget.blur()
+            }}
             title="click to reset"
           >
             {formatElapsed(now - startedAt)}

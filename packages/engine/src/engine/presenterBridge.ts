@@ -40,18 +40,40 @@ export function presenterUrl(): string {
   return url.toString()
 }
 
+const commandActions = new Set([
+  'next',
+  'prev',
+  'nextSlide',
+  'prevSlide',
+  'toggleDeny',
+  'fireAutoplay',
+  'goToSlide',
+])
+
+export interface PresenterAudienceOptions {
+  /**
+   * The widget-intercepting advance the shell already uses for keyboard and
+   * touch — remote forward advances must share the same ordering guarantee.
+   */
+  advance: () => void
+}
+
 /**
  * Audience half: publishes navigation state to the presenter window and
  * applies the commands it sends back. Commands are only accepted from the
  * window this side opened (or that introduced itself with a hello).
  */
-export function usePresenterAudience(): { openPresenter: () => void } {
+export function usePresenterAudience({ advance }: PresenterAudienceOptions): {
+  openPresenter: () => void
+} {
   const deck = useDeck()
   const presenterRef = useRef<Window | null>(null)
 
   const latestDeck = useRef(deck)
+  const latestAdvance = useRef(advance)
   useEffect(() => {
     latestDeck.current = deck
+    latestAdvance.current = advance
   })
 
   const postState = useCallback((target: Window) => {
@@ -90,9 +112,17 @@ export function usePresenterAudience(): { openPresenter: () => void } {
 
       if (message.prezzer === 'command') {
         if (event.source !== presenterRef.current) return
+        if (!commandActions.has(message.action)) return
         const actions = latestDeck.current
-        if (message.action === 'goToSlide') actions.goToSlide(message.index)
-        else actions[message.action]()
+        if (message.action === 'goToSlide') {
+          if (Number.isFinite(message.index)) actions.goToSlide(message.index)
+        } else if (message.action === 'next') {
+          // Forward advances start pending widgets before the deck moves,
+          // exactly like keyboard and touch.
+          latestAdvance.current()
+        } else {
+          actions[message.action]()
+        }
       }
     }
     window.addEventListener('message', onMessage)

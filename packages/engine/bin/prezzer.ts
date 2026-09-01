@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
 
 import tailwind from 'bun-plugin-tailwind'
-import type { BunPlugin } from 'bun'
 import { lstat, mkdir, mkdtemp, readdir, realpath, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { basename, dirname, isAbsolute, relative, resolve, sep } from 'node:path'
-import prezzerPlugin from '../bun-plugin'
+import prezzerPlugin, { bundlerResolvedAssets } from '../bun-plugin'
+import { version } from '../package.json'
 
 const color = (code: string) => (Bun.enableANSIColors ? code : '')
 const purple = color('\x1b[38;2;225;53;255m')
@@ -34,6 +34,7 @@ ${cyan}Options${reset}
   build
     --outdir <dir>   output directory ${muted}(default: dist)${reset}
     --no-minify      keep readable output while diagnosing builds
+  -v, --version      print the engine version
 
 ${cyan}Examples${reset}
   prezzer dev
@@ -53,25 +54,6 @@ function formatDuration(ms: number): string {
 function fail(message: string): never {
   console.error(`${red}error${reset} ${message}`)
   process.exit(1)
-}
-
-/** public/ files the bundler resolved itself; already inlined, never warned about */
-const bundlerResolvedAssets = new Set<string>()
-
-const publicAssetsPlugin: BunPlugin = {
-  name: 'prezzer-public-assets',
-  setup(builder) {
-    builder.onResolve({ filter: /^\// }, async ({ path }) => {
-      if (await Bun.file(path).exists()) return undefined
-      const projectPath = path.startsWith(process.cwd())
-        ? relative(process.cwd(), path)
-        : path.slice(1)
-      const publicPath = resolve('public', projectPath)
-      if (!(await Bun.file(publicPath).exists())) return undefined
-      bundlerResolvedAssets.add(publicPath)
-      return { path: publicPath }
-    })
-  },
 }
 
 async function collectFiles(directory: string): Promise<string[]> {
@@ -146,15 +128,20 @@ async function dev(args: string[]) {
   let hostname = '127.0.0.1'
   let entrySet = false
 
+  let portSet = false
+
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index]
     if (argument === '--port') {
       const value = Number(args[index + 1])
       if (!Number.isInteger(value) || value <= 0) fail('--port needs a positive number')
       port = value
+      portSet = true
       index += 1
     } else if (argument === '--host') {
-      hostname = args[index + 1] ?? fail('--host needs a hostname')
+      const value = args[index + 1]
+      if (!value || value.startsWith('-')) fail('--host needs a hostname')
+      hostname = value
       index += 1
     } else if (argument?.startsWith('-')) {
       fail(`unknown option: ${argument}`)
@@ -170,27 +157,39 @@ async function dev(args: string[]) {
   if (!(await Bun.file(entryPath).exists())) fail(`entry not found: ${entry}`)
   const { default: index } = await import(entryPath)
 
-  const publicRoot = resolve('public')
-  const server = Bun.serve({
-    port,
-    hostname,
-    routes: { '/': index },
-    development: { hmr: true, console: true },
-    async fetch(request) {
-      let pathname: string
-      try {
-        pathname = decodeURIComponent(new URL(request.url).pathname)
-      } catch {
-        return new Response('bad request', { status: 400 })
-      }
-      const assetPath = resolve(publicRoot, pathname.slice(1))
-      if (isWithin(publicRoot, assetPath)) {
-        const asset = Bun.file(assetPath)
-        if (await asset.exists()) return new Response(asset)
-      }
-      return new Response('not found', { status: 404 })
-    },
-  })
+  const serve = (candidatePort: number) =>
+    Bun.serve({
+      port: candidatePort,
+      hostname,
+      // The exact '/' route outranks the '/*' directory route, and the
+      // directory route rejects non-canonical paths, so public/ is served
+      // with ETag/304/Range handling and no traversal surface.
+      routes: {
+        '/': index,
+        '/*': { dir: resolve('public') },
+      },
+      development: { hmr: true, console: true },
+    })
+
+  let server: ReturnType<typeof serve> | undefined
+  // When the default port is busy, walk forward like every dev server;
+  // an explicit --port is a contract, so that one fails instead.
+  const attempts = portSet ? [port] : Array.from({ length: 10 }, (_, step) => port + step)
+  for (const candidate of attempts) {
+    try {
+      server = serve(candidate)
+      break
+    } catch (error) {
+      if ((error as { code?: string }).code !== 'EADDRINUSE') throw error
+    }
+  }
+  if (!server) {
+    fail(
+      portSet
+        ? `port ${port} is already in use — stop the other server or pick another --port`
+        : `ports ${port}–${port + attempts.length - 1} are all in use`
+    )
+  }
 
   console.log(
     `${purple}prezzer${reset} ${muted}dev${reset} ${cyan}${entry}${reset} ${muted}→${reset} ${cyan}${server.url}${reset} ${muted}· hot reload on · public/ served${reset}`
@@ -257,7 +256,7 @@ async function build(args: string[]) {
       compile: true,
       minify,
       define: { 'process.env.NODE_ENV': JSON.stringify('production') },
-      plugins: [publicAssetsPlugin, prezzerPlugin, tailwind],
+      plugins: [prezzerPlugin, tailwind],
     })
 
     if (!result.success) {
@@ -294,6 +293,8 @@ const [command, ...args] = Bun.argv.slice(2)
 
 if (!command || command === 'help' || command === '--help' || command === '-h') {
   printHelp()
+} else if (command === '--version' || command === '-v' || command === 'version') {
+  console.log(version)
 } else if (command === 'dev') {
   await dev(args)
 } else if (command === 'build') {

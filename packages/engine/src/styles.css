@@ -687,4 +687,112 @@
     size: 1920px 1080px;
     margin: 0;
   }
+||||||| parent of da9faf7 (feat(markdown): author decks as markdown files)
+/* Markdown slides: themed typography for prezzer/markdown chunks. Sizes are
+   absolute pixels against the 1920x1080 design canvas. */
+
+.prezzer-markdown-slide {
+  display: flex;
+  height: 100%;
+  padding: 96px 140px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 28px;
+  font-family: var(--prezzer-font-body, sans-serif);
+  color: var(--prezzer-color-text-primary, #f0f0f5);
+}
+
+.prezzer-markdown-chunk > * + * {
+  margin-top: 24px;
+}
+
+.prezzer-markdown-slide h1,
+.prezzer-markdown-slide h2,
+.prezzer-markdown-slide h3 {
+  margin: 0;
+  font-family: var(--prezzer-font-display, sans-serif);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+.prezzer-markdown-slide h1 {
+  font-size: 104px;
+}
+
+.prezzer-markdown-slide h2 {
+  font-size: 68px;
+}
+
+.prezzer-markdown-slide h3 {
+  font-size: 48px;
+  color: var(--prezzer-color-neon-cyan, #80ffea);
+}
+
+.prezzer-markdown-slide p {
+  max-width: 1360px;
+  margin: 0;
+  font-size: 40px;
+  line-height: 1.45;
+}
+
+.prezzer-markdown-slide ul,
+.prezzer-markdown-slide ol {
+  display: grid;
+  margin: 0;
+  padding-left: 48px;
+  gap: 12px;
+  font-size: 40px;
+  line-height: 1.5;
+}
+
+.prezzer-markdown-slide li::marker {
+  color: var(--prezzer-color-electric-purple, #e135ff);
+}
+
+.prezzer-markdown-slide strong {
+  color: var(--prezzer-color-coral, #ff6ac1);
+}
+
+.prezzer-markdown-slide em {
+  color: var(--prezzer-color-neon-cyan, #80ffea);
+}
+
+.prezzer-markdown-slide code {
+  padding: 4px 12px;
+  border-radius: 8px;
+  background: var(--prezzer-color-surface, #10101c);
+  color: var(--prezzer-color-neon-cyan, #80ffea);
+  font-family: var(--prezzer-font-mono, monospace);
+  font-size: 0.85em;
+}
+
+.prezzer-markdown-slide pre {
+  margin: 0;
+  padding: 32px 40px;
+  border: 1px solid var(--prezzer-color-grid-line, #1a1a2e);
+  border-radius: 16px;
+  background: var(--prezzer-color-terminal-black, #0d0d17);
+  font-size: 30px;
+  line-height: 1.5;
+  overflow: hidden;
+}
+
+.prezzer-markdown-slide pre code {
+  padding: 0;
+  background: transparent;
+  color: var(--prezzer-color-text-primary, #f0f0f5);
+}
+
+.prezzer-markdown-slide blockquote {
+  margin: 0;
+  padding: 8px 0 8px 36px;
+  border-left: 3px solid var(--prezzer-color-electric-purple, #e135ff);
+  color: var(--prezzer-color-text-muted, #9fa2bd);
+  font-size: 40px;
+}
+
+.prezzer-markdown-slide a {
+  color: var(--prezzer-color-neon-cyan, #80ffea);
+  text-decoration: underline dotted;
 }

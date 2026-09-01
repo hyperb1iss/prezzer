@@ -58,6 +58,18 @@ function Architecture() {
 
 `<Beat at={n}>` handles a standard reveal. `useBeat()` is better for diagrams, counters, timelines, and any scene whose whole state changes together. The current position is mirrored into the URL hash, so refresh resumes exactly where you were; the beat suffix is the 0-indexed beat, so `#4.2` is slide four with two reveals fired.
 
+## Write slides in markdown
+
+Text-heavy slides can live in one `.md` file instead of JSX:
+
+```tsx
+import slides from "./slides.md";
+
+<Deck slides={slides} />;
+```
+
+Slides separate on `---` lines, each may open with a `key: value` frontmatter block (`id`, `title`, `act`, `transition`, `deep`, `badge`, `notes`), and `<!-- beat -->` markers split a slide into reveals — the beat count derives from the markers, so it never drifts. The plugin renders everything at build time with `Bun.markdown`; the artifact ships pre-rendered HTML styled by the theme. Markdown slides are `SlideDef[]`, so they mix freely with JSX slides in one array. Reach for JSX when a slide needs widgets, `useBeat()` scenes, or deny variants.
+
 ## Add imperative widgets
 
 Self-timed demos can claim the next advance before the deck moves on. Implement `DeckWidgetHandle`, register the ref with `useWidgetRegistration()`, and report whether the widget already started. Keyboard and touch advances use the same widget ordering.

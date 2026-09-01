@@ -147,6 +147,33 @@ describe('prezzer build', () => {
     expect(await new Response(process.stdout).text()).toContain('network fallbacks')
   })
 
+  test('bakes a markdown deck through the plugin pipeline', async () => {
+    const project = await mkdtemp(resolve(tmpdir(), 'prezzer-build-test-'))
+    created.push(project)
+    await writeFile(
+      resolve(project, 'index.html'),
+      '<body><script type="module" src="./main.ts"></script></body>'
+    )
+    await writeFile(
+      resolve(project, 'main.ts'),
+      "import slides from './slides.md'\ndocument.body.textContent = slides.map((s) => s.id).join(',')"
+    )
+    await writeFile(
+      resolve(project, 'slides.md'),
+      '# baked from markdown\n\n<!-- beat -->\n\nthe reveal\n\n---\n\n## second slide\n'
+    )
+
+    const process = Bun.spawn(
+      ['bun', resolve(import.meta.dir, '../packages/engine/bin/prezzer.ts'), 'build'],
+      { cwd: project, stdout: 'pipe', stderr: 'pipe' }
+    )
+
+    expect(await process.exited).toBe(0)
+    const html = await Bun.file(resolve(project, 'dist/index.html')).text()
+    expect(html).toContain('baked from markdown')
+    expect(html).toContain('second slide')
+  })
+
   test('builds browser code for production', async () => {
     const project = await mkdtemp(resolve(tmpdir(), 'prezzer-build-test-'))
     created.push(project)

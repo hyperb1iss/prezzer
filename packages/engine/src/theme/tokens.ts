@@ -103,6 +103,15 @@ export const silkCircuit: Theme = {
   },
 }
 
+/**
+ * Blend any CSS color toward transparent, e.g. `withAlpha(color, 0.4)`.
+ * Works for every color form a theme can carry — hex, rgb(), oklch(),
+ * named colors — where naive hex-suffix alpha only survives 6-digit hex.
+ */
+export function withAlpha(color: string, alpha: number): string {
+  return `color-mix(in srgb, ${color} ${Math.round(alpha * 100)}%, transparent)`
+}
+
 export type ThemeOverrides = {
   [Section in keyof Theme]?: Partial<Theme[Section]>
 }

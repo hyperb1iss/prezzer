@@ -1,5 +1,6 @@
 import { motion } from 'motion/react'
 import { useDeck } from '../engine/DeckContext'
+import { withAlpha } from '../theme/tokens'
 
 /** Act-grouped slide dots along the bottom rail + position readout bottom-right. */
 export function ProgressRail() {
@@ -38,9 +39,11 @@ export function ProgressRail() {
                           backgroundColor: isCurrent
                             ? act.color
                             : isPast
-                              ? `${act.color}55`
+                              ? withAlpha(act.color, 0.33)
                               : theme.colors.gridLine,
-                          boxShadow: isCurrent ? `0 0 10px ${act.color}aa` : '0 0 0 transparent',
+                          boxShadow: isCurrent
+                            ? `0 0 10px ${withAlpha(act.color, 0.67)}`
+                            : '0 0 0 transparent',
                         }}
                         transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                       />
@@ -70,8 +73,8 @@ export function ProgressRail() {
             className="prezzer-deny-badge"
             style={{
               color: theme.colors.errorRed,
-              borderColor: `${theme.colors.errorRed}88`,
-              textShadow: `0 0 8px ${theme.colors.errorRed}66`,
+              borderColor: withAlpha(theme.colors.errorRed, 0.53),
+              textShadow: `0 0 8px ${withAlpha(theme.colors.errorRed, 0.4)}`,
             }}
           >
             DENY

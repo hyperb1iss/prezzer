@@ -1,4 +1,5 @@
 import { useDeckTheme } from '../engine/DeckContext'
+import { withAlpha } from '../theme/tokens'
 
 interface CreedChipProps {
   label: string
@@ -14,9 +15,9 @@ export function CreedChip({ label, color }: CreedChipProps) {
       className="prezzer-creed-chip"
       style={{
         color: chipColor,
-        borderColor: `${chipColor}66`,
-        backgroundColor: `${chipColor}14`,
-        boxShadow: `0 0 12px ${chipColor}33`,
+        borderColor: withAlpha(chipColor, 0.4),
+        backgroundColor: withAlpha(chipColor, 0.08),
+        boxShadow: `0 0 12px ${withAlpha(chipColor, 0.2)}`,
       }}
     >
       {label}

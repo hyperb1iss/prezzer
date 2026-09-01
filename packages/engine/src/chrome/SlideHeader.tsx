@@ -2,6 +2,7 @@ import { motion } from 'motion/react'
 import type { ReactNode } from 'react'
 import { useDeck } from '../engine/DeckContext'
 import { springs } from '../motion/animations'
+import { withAlpha } from '../theme/tokens'
 import { CreedChip } from './CreedChip'
 
 interface SlideHeaderProps {
@@ -30,8 +31,8 @@ export function SlideHeader({ act, title, tag, creeds }: SlideHeaderProps) {
               className="prezzer-slide-tag"
               style={{
                 color: theme.colors.electricYellow,
-                borderColor: `${theme.colors.electricYellow}55`,
-                backgroundColor: `${theme.colors.electricYellow}12`,
+                borderColor: withAlpha(theme.colors.electricYellow, 0.33),
+                backgroundColor: withAlpha(theme.colors.electricYellow, 0.07),
               }}
             >
               {tag}

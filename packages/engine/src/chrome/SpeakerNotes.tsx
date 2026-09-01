@@ -1,5 +1,6 @@
 import { motion } from 'motion/react'
 import { useDeck } from '../engine/DeckContext'
+import { withAlpha } from '../theme/tokens'
 
 /** `n` overlay for speaker notes. Unscaled for readability. */
 export function SpeakerNotes() {
@@ -16,8 +17,8 @@ export function SpeakerNotes() {
       transition={{ type: 'spring', stiffness: 300, damping: 32 }}
       className="prezzer-speaker-notes"
       style={{
-        backgroundColor: `${theme.colors.terminalBlack}f0`,
-        borderColor: `${theme.colors.electricPurple}44`,
+        backgroundColor: withAlpha(theme.colors.terminalBlack, 0.94),
+        borderColor: withAlpha(theme.colors.electricPurple, 0.27),
       }}
     >
       <div className="prezzer-speaker-notes-header">
@@ -40,7 +41,7 @@ export function SpeakerNotes() {
           <li
             key={note}
             className="prezzer-speaker-note"
-            style={{ color: `${theme.colors.textPrimary}d9` }}
+            style={{ color: withAlpha(theme.colors.textPrimary, 0.85) }}
           >
             <span style={{ color: theme.colors.neonCyan }}>▸ </span>
             {note}

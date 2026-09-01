@@ -1,4 +1,5 @@
 import type { Variants } from 'motion/react'
+import { withAlpha } from '../theme/tokens'
 
 /**
  * Spring presets - physics-based, no durations
@@ -377,7 +378,7 @@ export const drawFromCenter: Variants = {
 export const glowBloom = (color: string, delay = 0.4): Variants => ({
   hidden: { boxShadow: '0 0 0 rgba(0,0,0,0)' },
   visible: {
-    boxShadow: `0 0 30px ${color}40, 0 0 60px ${color}20`,
+    boxShadow: `0 0 30px ${withAlpha(color, 0.25)}, 0 0 60px ${withAlpha(color, 0.13)}`,
     transition: { duration: 0.6, delay },
   },
 })

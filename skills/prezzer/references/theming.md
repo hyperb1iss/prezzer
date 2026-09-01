@@ -57,6 +57,8 @@ z-index: var(--prezzer-layer-overlay);
 
 JS and CSS therefore share one source of truth; pick whichever is closer to the code you're writing.
 
+For translucent variants of a theme color, use `withAlpha(color, 0.4)` (exported from `prezzer` and `prezzer/theme`) — it compiles to `color-mix(in srgb, …)` and works for any CSS color a theme can carry. Never append hex-alpha suffixes like `` `${color}66` ``: they silently produce invalid colors the moment a theme override uses `rgb()`, `oklch()`, or a named color. The built-in chrome uses `withAlpha` everywhere for exactly this reason.
+
 ## Fonts
 
 The starter loads Clash Display, Satoshi, and Geist Mono from font CDNs. Those `<link>` tags stay external in the built file, so a deck presented fully offline falls back to system type — acceptable for most talks, wrong for airplane mode.

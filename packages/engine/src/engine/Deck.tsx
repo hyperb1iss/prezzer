@@ -16,6 +16,7 @@ import { BeatAudit } from './BeatAudit'
 import { DeckProvider, useDeck } from './DeckContext'
 import { isPresenterWindow, usePresenterAudience } from './presenterBridge'
 import { PresenterView } from './PresenterView'
+import { isPrintWindow, PrintView } from './PrintView'
 import { SlideContainer } from './SlideContainer'
 import { useKeyboardShortcuts } from './useKeyboardShortcuts'
 
@@ -194,6 +195,11 @@ export function Deck({
   showProgressRail = true,
   showScanlines = true,
 }: DeckProps) {
+  // ?print renders every slide as one fully revealed 16:9 page; PrintView's
+  // module scope already skipped animations globally for this window.
+  if (isPrintWindow()) {
+    return <PrintView slides={slides} acts={acts} theme={theme} />
+  }
   // The presenter window is this same artifact opened with ?presenter: it
   // renders the console instead of the shell and mirrors the deck window.
   if (isPresenterWindow()) {

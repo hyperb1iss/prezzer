@@ -9,16 +9,16 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "motion": "^12.42.2",
+    "motion": "catalog:",
     "prezzer": "workspace:*",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "devDependencies": {
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "bun-plugin-tailwind": "^0.1.2",
-    "tailwindcss": "^4.3.2",
-    "typescript": "^7.0.2"
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "bun-plugin-tailwind": "catalog:",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:"
   }
 }

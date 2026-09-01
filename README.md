@@ -23,7 +23,7 @@
 
 <p align="center">
   <a href="https://bun.sh">
-    <img src="https://img.shields.io/badge/Bun-%E2%89%A51.3-14151a?style=for-the-badge&logo=bun&logoColor=white" alt="Bun">
+    <img src="https://img.shields.io/badge/Bun-%E2%89%A51.4-14151a?style=for-the-badge&logo=bun&logoColor=white" alt="Bun">
   </a>
   <a href="https://react.dev">
     <img src="https://img.shields.io/badge/React-19-61dafb?style=for-the-badge&logo=react&logoColor=black" alt="React 19">

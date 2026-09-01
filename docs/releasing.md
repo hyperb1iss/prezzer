@@ -14,6 +14,22 @@ bun pm pack --dry-run --cwd packages/engine
 bun pm pack --dry-run --cwd packages/create-prezzer
 ```
 
+## Release notes
+
+Generate the draft with [git-iris](https://github.com/hyperb1iss/git-iris), which analyzes the real range and writes the notes with the configured Anthropic model (Claude Opus 5 in the global config):
+
+```bash
+git-iris release-notes --from <previous-tag> --to HEAD --raw > /tmp/notes.md
+```
+
+git-iris reads `ANTHROPIC_API_KEY` from the environment, so non-interactive shells must load it first. Fact-check the draft against `git diff <previous-tag>..HEAD` before shipping (verify breaking-change claims in particular, and sweep the style), then create the release with the notes file:
+
+```bash
+gh release create vX.Y.Z --target main --title "vX.Y.Z: <headline>" --notes-file /tmp/notes.md
+```
+
+Publishing the release triggers the Publish workflow against the tag.
+
 ## Trusted publishing
 
 Configure an npm trusted publisher for each package with:
@@ -30,7 +46,7 @@ Run the **Publish** workflow manually. Its `dry-run` input defaults to true and 
 
 ## Publish
 
-Create a GitHub release from the verified commit. Publishing the release invokes the same workflow with dry-run disabled, checks out the release tag, then publishes:
+Create the GitHub release with the generated notes (see Release notes above). Publishing it invokes the same workflow with dry-run disabled, checks out the release tag, then publishes:
 
 1. `packages/engine`
 2. `packages/create-prezzer`

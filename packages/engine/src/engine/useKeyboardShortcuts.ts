@@ -13,6 +13,7 @@ export interface UseKeyboardShortcutsOptions {
   onToggleFullscreen?: () => void
   onToggleNotes?: () => void
   onToggleGrid?: () => void
+  onToggleHelp?: () => void
   /** Returns true if an overlay consumed the Escape */
   onEscape?: () => boolean
   /**
@@ -28,6 +29,7 @@ export function useKeyboardShortcuts({
   onToggleFullscreen,
   onToggleNotes,
   onToggleGrid,
+  onToggleHelp,
   onEscape,
   onAdvanceIntercept,
   enabled = true,
@@ -39,7 +41,7 @@ export function useKeyboardShortcuts({
     if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return
 
     // A held toggle key must not strobe fullscreen/notes/grid/deny/autoplay.
-    if (event.repeat && /^[fngda]$/i.test(event.key)) return
+    if (event.repeat && /^[fngda?]$/i.test(event.key)) return
 
     const target = event.target
     if (target instanceof Element && target.closest(interactiveElementSelector)) {
@@ -112,6 +114,13 @@ export function useKeyboardShortcuts({
       case 'A':
         event.preventDefault()
         fireAutoplay()
+        break
+
+      case '?':
+        if (onToggleHelp) {
+          event.preventDefault()
+          onToggleHelp()
+        }
         break
 
       case 'Escape':

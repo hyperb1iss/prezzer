@@ -3,6 +3,7 @@ import { type ReactNode, useCallback, useState } from 'react'
 import { GridOverview } from '../chrome/GridOverview'
 import { ProgressRail } from '../chrome/ProgressRail'
 import { RolloutBadge } from '../chrome/RolloutBadge'
+import { ShortcutHelp } from '../chrome/ShortcutHelp'
 import { SpeakerNotes } from '../chrome/SpeakerNotes'
 import { useFullscreen } from '../hooks/useFullscreen'
 import { useSlideScale } from '../hooks/useSlideScale'
@@ -49,10 +50,15 @@ function DeckShell({
   const { startNextWidget } = useSlideWidgets()
   const [notesOpen, setNotesOpen] = useState(false)
   const [gridOpen, setGridOpen] = useState(false)
+  const [helpOpen, setHelpOpen] = useState(false)
   const { toggleFullscreen, exitFullscreen, isFullscreen } = useFullscreen()
   const { scale, width, height } = useSlideScale({ designWidth, designHeight, minScale, maxScale })
 
   const handleEscape = useCallback((): boolean => {
+    if (helpOpen) {
+      setHelpOpen(false)
+      return true
+    }
     if (gridOpen) {
       setGridOpen(false)
       return true
@@ -66,12 +72,13 @@ function DeckShell({
       return true
     }
     return false
-  }, [gridOpen, notesOpen, isFullscreen, exitFullscreen])
+  }, [helpOpen, gridOpen, notesOpen, isFullscreen, exitFullscreen])
 
   useKeyboardShortcuts({
     onToggleFullscreen: toggleFullscreen,
     onToggleNotes: () => setNotesOpen((open) => !open),
     onToggleGrid: () => setGridOpen((open) => !open),
+    onToggleHelp: () => setHelpOpen((open) => !open),
     onEscape: handleEscape,
     onAdvanceIntercept: startNextWidget,
   })
@@ -82,7 +89,11 @@ function DeckShell({
 
   // The overlays own the screen while open: a tap that closes the grid
   // must not also step the deck behind it.
-  useTouchNavigation({ onNext: advance, onPrev: prev, enabled: !gridOpen && !notesOpen })
+  useTouchNavigation({
+    onNext: advance,
+    onPrev: prev,
+    enabled: !gridOpen && !notesOpen && !helpOpen,
+  })
 
   const def = slides[slideIndex]
   if (!def) {
@@ -98,8 +109,8 @@ function DeckShell({
     <div className="slide-viewport" style={themeToCssVars(theme)}>
       <div
         className="slide-canvas-wrapper"
-        aria-hidden={gridOpen || notesOpen}
-        inert={gridOpen || notesOpen || undefined}
+        aria-hidden={gridOpen || notesOpen || helpOpen}
+        inert={gridOpen || notesOpen || helpOpen || undefined}
         style={{
           width: `${width * scale}px`,
           height: `${height * scale}px`,
@@ -136,6 +147,14 @@ function DeckShell({
       <AnimatePresence>
         {gridOpen && <GridOverview onClose={() => setGridOpen(false)} />}
       </AnimatePresence>
+      <AnimatePresence>
+        {helpOpen && <ShortcutHelp onClose={() => setHelpOpen(false)} />}
+      </AnimatePresence>
+
+      {/* Announces slide changes to screen readers; beats stay quiet. */}
+      <div aria-live="polite" className="prezzer-sr-only">
+        {`Slide ${slideIndex + 1} of ${slides.length}: ${def.title}`}
+      </div>
 
       {extraChrome}
     </div>

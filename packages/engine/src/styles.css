@@ -152,6 +152,62 @@
   margin-left: auto;
 }
 
+.prezzer-help-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  padding: 40px;
+  backdrop-filter: blur(16px);
+}
+
+.prezzer-help-panel {
+  width: min(560px, 100%);
+  padding: 28px 32px;
+  border: 1px solid;
+  border-radius: 12px;
+}
+
+.prezzer-help-title {
+  margin: 0 0 20px;
+  font-family: var(--prezzer-font-mono, monospace);
+  font-size: 14px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.prezzer-help-list {
+  display: flex;
+  margin: 0;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.prezzer-help-row {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  font-family: var(--prezzer-font-mono, monospace);
+  font-size: 14px;
+}
+
+.prezzer-help-row dt {
+  flex: 0 0 180px;
+  letter-spacing: 0.08em;
+}
+
+.prezzer-help-row dd {
+  margin: 0;
+}
+
+.prezzer-help-hint {
+  margin: 20px 0 0;
+  font-family: var(--prezzer-font-mono, monospace);
+  font-size: 12px;
+}
+
 .prezzer-grid-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

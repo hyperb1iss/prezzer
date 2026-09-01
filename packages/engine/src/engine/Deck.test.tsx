@@ -116,6 +116,16 @@ describe('Deck', () => {
     expect(screen.getByText('add your first slide to begin')).toBeTruthy()
   })
 
+  test('opens the shortcut help overlay on ? and closes it on escape', async () => {
+    render(<Deck slides={deckWith(EmptySlide)} showProgressRail={false} />)
+
+    fireEvent.keyDown(window, { key: '?' })
+    expect(screen.getByRole('dialog', { name: 'keyboard' })).toBeTruthy()
+
+    fireEvent.keyDown(window, { key: 'Escape' })
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+  })
+
   test('mirrors position without growing browser history', async () => {
     render(<Deck slides={deckWith(BeatState, 2)} showProgressRail={false} />)
     await waitFor(() => expect(window.location.hash).toBe('#1'))

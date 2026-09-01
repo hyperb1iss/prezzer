@@ -1,16 +1,30 @@
 import { motion } from 'motion/react'
+import { useEffect, useRef } from 'react'
 import { useDeck } from '../engine/DeckContext'
 import { withAlpha } from '../theme/tokens'
 
 /** `n` overlay for speaker notes. Unscaled for readability. */
 export function SpeakerNotes() {
   const { slideIndex, beat, slides, theme } = useDeck()
+  const panelRef = useRef<HTMLElement>(null)
   const def = slides[slideIndex]
+
+  // Focus announces the panel to screen readers and gives it back on close.
+  useEffect(() => {
+    const previous = document.activeElement
+    panelRef.current?.focus()
+    return () => {
+      if (previous instanceof HTMLElement) previous.focus()
+    }
+  }, [])
+
   if (!def) return null
 
   return (
     <motion.aside
+      ref={panelRef}
       aria-label="Speaker notes"
+      tabIndex={-1}
       initial={{ y: '100%' }}
       animate={{ y: 0 }}
       exit={{ y: '100%' }}

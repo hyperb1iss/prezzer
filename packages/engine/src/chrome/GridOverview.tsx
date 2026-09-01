@@ -12,7 +12,14 @@ export function GridOverview({ onClose }: GridOverviewProps) {
   const { slideIndex, goToSlide, slides, acts, theme } = useDeck()
   const dialogRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => dialogRef.current?.focus(), [])
+  useEffect(() => {
+    const previous = document.activeElement
+    dialogRef.current?.focus()
+    return () => {
+      // Hand focus back to wherever the presenter was before the overlay.
+      if (previous instanceof HTMLElement) previous.focus()
+    }
+  }, [])
 
   return (
     <motion.div

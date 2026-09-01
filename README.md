@@ -144,6 +144,7 @@ export function Talk() {
 | `f`                  | fullscreen                          |
 | `d`                  | deny mode for failure-path demos    |
 | `a`                  | fire the autoplay signal to widgets |
+| `?`                  | shortcut help overlay               |
 
 Page up and page down mean presenter clickers work out of the box.
 

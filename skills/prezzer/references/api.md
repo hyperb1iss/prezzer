@@ -79,7 +79,8 @@ The root also exports the shell's building blocks — `useKeyboardShortcuts`, `u
 | `g` / `n` / `f`            | Grid overview / speaker notes / fullscreen                                                     |
 | `d`                        | Deny mode; auto-resets on slide change                                                         |
 | `a`                        | Fire the autoplay signal (increments `autoplaySignal`)                                         |
-| `esc`                      | Close grid, then notes, then exit fullscreen                                                   |
+| `?`                        | Shortcut help overlay                                                                          |
+| `esc`                      | Close help, then grid, then notes, then exit fullscreen                                        |
 
 Shortcuts are skipped when `meta`, `ctrl`, or `alt` is held (`shift` stays live — it upgrades advances to whole-slide jumps) or when the event target is inside the guard selector: `a`, `button`, `input`, `select`, `textarea`, `video`, `audio`, `summary`, `[role="button"]`, any `[contenteditable]` not set to `"false"`, or anything under `[data-prezzer-interactive]` — browser shortcuts and embedded interactive demos keep working. Mark custom demo surfaces (canvas playgrounds, ARIA widgets) with `data-prezzer-interactive` to keep the deck's hands off them; the same guard applies to touch. Holding a toggle key (`f`/`n`/`g`/`d`/`a`) fires once, not per key-repeat. Page up/down means presenter clickers work unconfigured.
 

@@ -97,6 +97,10 @@ For an artifact whose typography survives airplane mode, self-host instead: down
 
 `prezzer build` inlines every referenced `public/` asset as a data URI, fonts included, so the deck stays one self-contained file.
 
+## Export a PDF
+
+Open the built artifact with `?print` appended (works from `file://` too) and print from the browser: every slide renders as one fully revealed 16:9 page sized to the design canvas. Speaker notes stay out of the pages; hand the deck itself to anyone who needs the interactive version.
+
 ## Verify what gets presented
 
 ```bash

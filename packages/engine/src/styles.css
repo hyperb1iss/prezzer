@@ -631,3 +631,54 @@
   font-size: 12px;
   letter-spacing: 0.06em;
 }
+
+/* Print mode: ?print renders one 16:9 page per slide; the browser print
+   dialog is the PDF exporter. zoom shrinks the on-screen preview only. */
+
+.prezzer-print {
+  zoom: 0.45;
+  min-height: 100vh;
+  padding: 24px;
+  background: var(--prezzer-color-deep-black, #0a0a12);
+}
+
+.prezzer-print-hint {
+  max-width: 1920px;
+  margin: 0 0 24px;
+  padding: 20px 28px;
+  border: 1px solid;
+  border-radius: 12px;
+  font-family: var(--prezzer-font-mono, monospace);
+  font-size: 26px;
+}
+
+.prezzer-print-page {
+  position: relative;
+  width: 1920px;
+  height: 1080px;
+  margin: 0 0 24px;
+  overflow: hidden;
+  break-after: page;
+  break-inside: avoid;
+}
+
+@media print {
+  .prezzer-print {
+    zoom: 1;
+    min-height: 0;
+    padding: 0;
+  }
+
+  .prezzer-print-hint {
+    display: none;
+  }
+
+  .prezzer-print-page {
+    margin: 0;
+  }
+
+  @page {
+    size: 1920px 1080px;
+    margin: 0;
+  }
+}

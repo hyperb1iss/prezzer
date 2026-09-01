@@ -59,6 +59,7 @@ A Prezzer deck is real software. It lives in its own repository, renders with re
 - 📦 **One-file offline artifact** — `prezzer build` bakes markup, styles, scripts, images, and self-hosted fonts into a single HTML file
 - 🎭 **Presenter chrome built in** — speaker notes, grid overview, shortcut help, act-aware progress rail, and honest rollout badges
 - 🖥️ **Presenter view** — press `p` for a second window with notes, next-slide preview, and a timer; the one HTML file plays both roles, even from `file://`
+- 🖨️ **PDF without dependencies** — open the artifact with `?print` and the browser's print dialog exports every slide as a fully revealed 16:9 page
 - 💫 **Eight slide transitions** — `portal`, `glitch`, `zoom`, `rise`, `spiral`, `morph`, `split`, and `slide`, chosen per slide
 - 🔗 **Hash deep links** — `#4.2` reopens slide four mid-reveal; refresh resumes exactly where you were
 - 🧨 **Deny mode** — one keypress flips slides that read `useDenyMode()` into their authored failure-path variant, made for live security demos

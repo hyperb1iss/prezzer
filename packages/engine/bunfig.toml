@@ -1,6 +1,3 @@
-[serve.static]
-plugins = ["prezzer/bun-plugin", "bun-plugin-tailwind"]
-
 # Mirrors the root preload so `bun test` works from inside the package too.
 [test]
 preload = ["../../test/setup.ts"]

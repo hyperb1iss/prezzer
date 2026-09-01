@@ -70,10 +70,10 @@ function deriveActs(slides: readonly ResolvedSlideDef[], theme: Theme): ActDef[]
 export interface DeckProviderProps {
   slides: readonly SlideDef[]
   /** Act labels/colors for the rail and grid; derived from slides when omitted */
-  acts?: readonly ActDef[]
-  theme?: Theme
+  acts?: readonly ActDef[] | undefined
+  theme?: Theme | undefined
   /** Mirror position into location.hash; disable when embedding the deck in a host page */
-  hashSync?: boolean
+  hashSync?: boolean | undefined
   children: ReactNode
 }
 

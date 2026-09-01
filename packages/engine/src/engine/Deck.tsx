@@ -18,20 +18,20 @@ import { useKeyboardShortcuts } from './useKeyboardShortcuts'
 
 export interface DeckProps {
   slides: readonly SlideDef[]
-  acts?: readonly ActDef[]
-  theme?: Theme
+  acts?: readonly ActDef[] | undefined
+  theme?: Theme | undefined
   /** Mirror position into location.hash; disable when embedding the deck in a host page */
-  hashSync?: boolean
+  hashSync?: boolean | undefined
   /** Design canvas dimensions; 16:9 projector default */
-  designWidth?: number
-  designHeight?: number
+  designWidth?: number | undefined
+  designHeight?: number | undefined
   /** Scale clamp for extreme viewports; defaults 0.2 and 2 */
-  minScale?: number
-  maxScale?: number
+  minScale?: number | undefined
+  maxScale?: number | undefined
   /** Extra presenter chrome rendered outside the scaled canvas */
-  extraChrome?: ReactNode
-  showProgressRail?: boolean
-  showScanlines?: boolean
+  extraChrome?: ReactNode | undefined
+  showProgressRail?: boolean | undefined
+  showScanlines?: boolean | undefined
 }
 
 function DeckShell({

@@ -120,7 +120,7 @@ if (!options.target) fail('choose a directory, for example: bun create prezzer m
 const target = resolve(options.target)
 const existingEntries = await directoryEntries(target)
 if (existingEntries.length > 0 && !options.force) {
-  fail(`${target} is not empty; use --force to keep existing files`)
+  fail(`${target} is not empty; use --force to write anyway (template files overwrite collisions)`)
 }
 
 const name = packageName(target)

@@ -17,6 +17,8 @@ bun test packages/engine/src/engine/Deck.test.tsx
 bun run typecheck
 ```
 
+Tests run from the repo root or from inside any package — the happy-dom test preload lives in `test/setup.ts` and every workspace member with tests mirrors it through its own `bunfig.toml`.
+
 Before opening a pull request, run the full check and build. Include the exact commands and results in the pull request description.
 
 For visual changes, open `examples/hello/dist/index.html` after the build and verify the offline artifact, not only the development server. Check keyboard navigation, touch behavior, notes, grid overview, widgets, and reduced motion when the change touches those paths.

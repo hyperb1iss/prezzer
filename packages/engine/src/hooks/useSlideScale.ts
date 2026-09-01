@@ -2,17 +2,17 @@ import { useLayoutEffect, useState } from 'react'
 
 interface SlideScaleConfig {
   /** Design canvas width in pixels */
-  designWidth?: number
+  designWidth?: number | undefined
   /** Design canvas height in pixels */
-  designHeight?: number
+  designHeight?: number | undefined
   /** Margin around the scaled content (0-1) */
-  margin?: number
+  margin?: number | undefined
   /** Minimum allowed scale */
-  minScale?: number
+  minScale?: number | undefined
   /** Maximum allowed scale */
-  maxScale?: number
+  maxScale?: number | undefined
   /** Scale mode: 'contain' (letterbox) or 'cover' (fill, may crop) */
-  mode?: 'contain' | 'cover'
+  mode?: 'contain' | 'cover' | undefined
 }
 
 interface SlideScaleResult {

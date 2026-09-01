@@ -125,7 +125,7 @@ if (existingEntries.length > 0 && !options.force) {
 
 const name = packageName(target)
 const template = resolve(import.meta.dir, '../template')
-const prezzerVersion = process.env.PREZZER_PACKAGE_SPEC ?? '^0.1.0'
+const prezzerVersion = process.env.PREZZER_PACKAGE_SPEC ?? '^0.2.0'
 
 console.log(`${purple}create-prezzer${reset} ${muted}scaffolding${reset} ${cyan}${name}${reset}`)
 

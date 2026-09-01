@@ -1,6 +1,6 @@
 # Core API
 
-Accurate for `prezzer` 0.1.0. Source of truth when developing the engine itself: `packages/engine/src/`.
+Accurate for `prezzer` 0.2.0. Source of truth when developing the engine itself: `packages/engine/src/`.
 
 ## Deck
 

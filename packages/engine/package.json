@@ -1,6 +1,6 @@
 {
   "name": "prezzer",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Interactive presentations with beat-driven slides, real React, and decks you own",
   "license": "MIT",
   "author": "Stefanie Jane <stef@hyperbliss.tech>",

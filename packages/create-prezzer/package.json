@@ -1,6 +1,6 @@
 {
   "name": "create-prezzer",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Create a Bun-native Prezzer deck",
   "license": "MIT",
   "author": "Stefanie Jane <stef@hyperbliss.tech>",

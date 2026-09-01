@@ -11,10 +11,14 @@ interface BeatAuditProps {
 }
 
 /**
- * Dev-only drift check between a slide's declared `beats` and the `<Beat at>`
- * values actually mounted inside it. A Beat past the declared range can never
- * reveal, and the drift is silent without this. Conditionally rendered Beats
- * can hide from the audit, so it only ever warns about what it saw mounted.
+ * Drift check between a slide's declared `beats` and the `<Beat at>` values
+ * actually mounted inside it. A Beat past the declared range can never
+ * reveal, and the drift is silent without this. The check is not gated on
+ * NODE_ENV: the library prebuilds under production, which would fold a dev
+ * gate out of dist for every consumer, and a warning about provably
+ * unreachable content is worth one console line anywhere it happens.
+ * Conditionally rendered Beats can hide from the audit, so it only ever
+ * warns about what it saw mounted.
  */
 export function BeatAudit({ id, beats, children }: BeatAuditProps) {
   const seen = useRef(new Set<number>())
@@ -28,7 +32,7 @@ export function BeatAudit({ id, beats, children }: BeatAuditProps) {
   }, [])
 
   useEffect(() => {
-    if (process.env.NODE_ENV === 'production' || warned.current) return
+    if (warned.current) return
     const highest = Math.max(0, ...seen.current)
     if (highest > beats - 1) {
       warned.current = true

@@ -55,6 +55,18 @@ export function GridOverview({ onClose }: GridOverviewProps) {
   }
 
   const handleKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    // Browser and app shortcuts stay ahead of the grid, same as the deck.
+    if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return
+
+    // Focus on a slide card puts the target inside the interactive-element
+    // guard, so the deck's window listener never sees these; the grid owns
+    // its own dismissal keys.
+    if (event.key === 'Escape' || event.key === 'g' || event.key === 'G') {
+      event.preventDefault()
+      onClose()
+      return
+    }
+
     if (/^[0-9]$/.test(event.key)) {
       event.preventDefault()
       const buffer = `${typeahead}${event.key}`.slice(0, 3)

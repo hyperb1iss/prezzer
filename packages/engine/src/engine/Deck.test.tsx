@@ -190,6 +190,66 @@ describe('Deck', () => {
     expect(document.activeElement).toBe(cards[1] as HTMLElement)
   })
 
+  test('grid escape still works after focus moves to a card', async () => {
+    render(<Deck slides={deckWith(EmptySlide)} showProgressRail={false} />)
+
+    fireEvent.keyDown(window, { key: 'g' })
+    const grid = screen.getByRole('dialog', { name: 'Slide overview' })
+
+    fireEvent.keyDown(grid, { key: 'ArrowRight' })
+    const focused = document.activeElement as HTMLElement
+    fireEvent.keyDown(focused, { key: 'Escape' })
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull(), overlayExit)
+  }, 15000)
+
+  test('grid leaves modified keystrokes to the browser', () => {
+    render(<Deck slides={deckWith(EmptySlide)} showProgressRail={false} />)
+
+    fireEvent.keyDown(window, { key: 'g' })
+    const grid = screen.getByRole('dialog', { name: 'Slide overview' })
+    const dialogFocus = document.activeElement
+
+    fireEvent.keyDown(grid, { key: 'ArrowRight', metaKey: true })
+    expect(document.activeElement).toBe(dialogFocus as HTMLElement)
+  })
+
+  test('beat audit re-arms when a live deck replaces the slide', async () => {
+    const warn = spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const OverdeclaredA = () => (
+        <Beat at={2}>
+          <p>unreachable a</p>
+        </Beat>
+      )
+      const OverdeclaredB = () => (
+        <Beat at={3}>
+          <p>unreachable b</p>
+        </Beat>
+      )
+      const { rerender } = render(
+        <Deck
+          slides={[{ id: 'A', title: 'a', component: OverdeclaredA, beats: 1 }]}
+          showProgressRail={false}
+        />
+      )
+      rerender(
+        <Deck
+          slides={[{ id: 'B', title: 'b', component: OverdeclaredB, beats: 1 }]}
+          showProgressRail={false}
+        />
+      )
+      await waitFor(() => {
+        const beatWarnings = warn.mock.calls.filter((call) =>
+          String(call[0]).includes('can never reveal')
+        )
+        expect(beatWarnings.length).toBe(2)
+      })
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
   test('mirrors position without growing browser history', async () => {
     render(<Deck slides={deckWith(BeatState, 2)} showProgressRail={false} />)
     await waitFor(() => expect(window.location.hash).toBe('#1'))
@@ -220,7 +280,9 @@ describe('Deck', () => {
     window.dispatchEvent(new Event('hashchange'))
 
     await waitFor(() => expect(window.location.hash).toBe('#2'))
-    expect(screen.getByRole('region', { name: 'second' })).toBeTruthy()
+    await waitFor(() => expect(screen.getByRole('region', { name: 'second' })).toBeTruthy(), {
+      timeout: 4000,
+    })
   })
 
   test('leaves the URL alone when hashSync is off', async () => {

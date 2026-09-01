@@ -138,7 +138,7 @@ function DeckShell({
               title={def.title}
               transition={def.transition}
             >
-              <BeatAudit id={def.id} beats={def.beats}>
+              <BeatAudit key={def.id} id={def.id} beats={def.beats}>
                 <SlideComponent />
               </BeatAudit>
             </SlideContainer>
@@ -150,11 +150,12 @@ function DeckShell({
       </div>
 
       <AnimatePresence>{notesOpen && <SpeakerNotes />}</AnimatePresence>
-      <AnimatePresence>
-        {modal === 'grid' && <GridOverview onClose={() => setModal(null)} />}
-      </AnimatePresence>
-      <AnimatePresence>
-        {modal === 'help' && <ShortcutHelp onClose={() => setModal(null)} />}
+      {/* One AnimatePresence with mode="wait" so a modal swap finishes the
+          old dialog's exit before the replacement mounts — two aria-modal
+          surfaces must never coexist. */}
+      <AnimatePresence mode="wait">
+        {modal === 'grid' && <GridOverview key="grid" onClose={() => setModal(null)} />}
+        {modal === 'help' && <ShortcutHelp key="help" onClose={() => setModal(null)} />}
       </AnimatePresence>
 
       {/* Announces slide changes to screen readers; beats stay quiet. */}

@@ -186,19 +186,42 @@ async function dev(args: string[]) {
   if (!(await Bun.file(entryPath).exists())) fail(`entry not found: ${entry}`)
   const { default: index } = await import(entryPath)
 
-  const serve = (candidatePort: number) =>
-    Bun.serve({
+  // The exact '/' route outranks the '/*' directory route, and the
+  // directory route rejects non-canonical paths, so public/ is served
+  // with ETag/304/Range handling and no traversal surface. Bun opens the
+  // directory eagerly, so a deck without public/ gets a guarded fetch
+  // fallback instead — it also covers a public/ created mid-session.
+  const publicRoot = resolve('public')
+  const hasPublicDirectory = await lstat(publicRoot)
+    .then((stats) => stats.isDirectory())
+    .catch(() => false)
+
+  async function serveFallback(request: Request): Promise<Response> {
+    let pathname: string
+    try {
+      pathname = decodeURIComponent(new URL(request.url).pathname)
+    } catch {
+      return new Response('bad request', { status: 400 })
+    }
+    const assetPath = resolve(publicRoot, pathname.slice(1))
+    if (isWithin(publicRoot, assetPath)) {
+      const asset = Bun.file(assetPath)
+      if (await asset.exists()) return new Response(asset)
+    }
+    return new Response('not found', { status: 404 })
+  }
+
+  const serve = (candidatePort: number) => {
+    const shared = {
       port: candidatePort,
       hostname,
-      // The exact '/' route outranks the '/*' directory route, and the
-      // directory route rejects non-canonical paths, so public/ is served
-      // with ETag/304/Range handling and no traversal surface.
-      routes: {
-        '/': index,
-        '/*': { dir: resolve('public') },
-      },
       development: { hmr: true, console: true },
-    })
+      fetch: serveFallback,
+    }
+    return hasPublicDirectory
+      ? Bun.serve({ ...shared, routes: { '/': index, '/*': { dir: publicRoot } } })
+      : Bun.serve({ ...shared, routes: { '/': index } })
+  }
 
   let server: ReturnType<typeof serve> | undefined
   // When the default port is busy, walk forward like every dev server;

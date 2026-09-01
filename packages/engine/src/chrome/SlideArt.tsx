@@ -13,15 +13,15 @@ interface SlideArtProps {
   fit?: 'cover' | 'contain'
 }
 
-// Mid-stops derive from the theme too, so a themed deck never gets a
-// half-themed scrim.
-const scrimMid = (alpha: number) =>
-  `color-mix(in srgb, var(--prezzer-color-deep-black) ${alpha}%, transparent)`
+// Stops derive from the theme so a themed deck never gets a half-themed
+// scrim; the literal fallback keeps SlideArt context-free outside a Deck.
+const scrimBase = 'var(--prezzer-color-deep-black, #0a0a12)'
+const scrimMid = (alpha: number) => `color-mix(in srgb, ${scrimBase} ${alpha}%, transparent)`
 
 const scrimGradient: Record<Scrim, string> = {
-  left: `linear-gradient(90deg, var(--prezzer-color-deep-black) 0%, ${scrimMid(70)} 30%, transparent 62%)`,
-  right: `linear-gradient(270deg, var(--prezzer-color-deep-black) 0%, ${scrimMid(70)} 30%, transparent 62%)`,
-  bottom: `linear-gradient(0deg, var(--prezzer-color-deep-black) 0%, ${scrimMid(60)} 25%, transparent 55%)`,
+  left: `linear-gradient(90deg, ${scrimBase} 0%, ${scrimMid(70)} 30%, transparent 62%)`,
+  right: `linear-gradient(270deg, ${scrimBase} 0%, ${scrimMid(70)} 30%, transparent 62%)`,
+  bottom: `linear-gradient(0deg, ${scrimBase} 0%, ${scrimMid(60)} 25%, transparent 55%)`,
   none: 'transparent',
 }
 

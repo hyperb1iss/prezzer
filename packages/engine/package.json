@@ -63,7 +63,7 @@
     "react-dom": ">=19.0.0"
   },
   "dependencies": {
-    "bun-plugin-tailwind": "catalog:"
+    "bun-plugin-tailwind": "^0.1.2"
   },
   "devDependencies": {
     "@types/react": "catalog:",

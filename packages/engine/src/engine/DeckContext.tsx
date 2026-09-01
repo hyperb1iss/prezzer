@@ -100,7 +100,8 @@ export function DeckProvider({
     if (!hashSync || slides.length === 0) return
     const hash = formatHash(nav)
     if (window.location.hash.slice(1) !== hash) {
-      history.replaceState(null, '', `#${hash}`)
+      // Carry history.state so a host page's router/scroll state survives.
+      history.replaceState(history.state, '', `#${hash}`)
     }
   }, [nav, slides.length, hashSync])
 
@@ -128,7 +129,7 @@ export function DeckProvider({
       // URL to the position actually shown so refresh stays truthful.
       const canonical = formatHash(parsed)
       if (window.location.hash.slice(1) !== canonical) {
-        history.replaceState(null, '', `#${canonical}`)
+        history.replaceState(history.state, '', `#${canonical}`)
       }
       setNav((prev) => {
         if (parsed.slideIndex === prev.slideIndex && parsed.beat === prev.beat) return prev

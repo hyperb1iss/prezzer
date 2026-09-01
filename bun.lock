@@ -53,7 +53,7 @@
     },
     "packages/create-prezzer": {
       "name": "create-prezzer",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "bin": {
         "create-prezzer": "bin/create-prezzer.js",
       },
@@ -64,12 +64,12 @@
     },
     "packages/engine": {
       "name": "prezzer",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "bin": {
         "prezzer": "bin/prezzer.js",
       },
       "dependencies": {
-        "bun-plugin-tailwind": "catalog:",
+        "bun-plugin-tailwind": "^0.1.2",
       },
       "devDependencies": {
         "@types/react": "catalog:",

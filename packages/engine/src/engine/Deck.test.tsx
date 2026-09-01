@@ -139,6 +139,15 @@ describe('Deck', () => {
     expect(history.length).toBe(entries)
   })
 
+  test('preserves host history.state while mirroring the hash', async () => {
+    history.replaceState({ hostRouter: 'kept' }, '', window.location.href)
+    render(<Deck slides={deckWith(EmptySlide)} showProgressRail={false} />)
+
+    fireEvent.keyDown(window, { key: 'End' })
+    await waitFor(() => expect(window.location.hash).toBe('#2'))
+    expect((history.state as { hostRouter?: string })?.hostRouter).toBe('kept')
+  })
+
   test('rewrites a hand-typed hash that clamps to the deck', async () => {
     render(<Deck slides={deckWith(EmptySlide)} showProgressRail={false} />)
     await waitFor(() => expect(window.location.hash).toBe('#1'))

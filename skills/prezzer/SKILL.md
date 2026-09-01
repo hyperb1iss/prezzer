@@ -17,6 +17,7 @@ This file carries the workflow and the map. The `references/` directory carries 
 | [references/motion.md](references/motion.md)             | Slide transition personalities, spring presets, the reveal/stagger/glow variant catalog                                 |
 | [references/widgets.md](references/widgets.md)           | Beat-driven diagrams (pull) or self-timed demos that claim the spacebar (push), with a verified working example         |
 | [references/authoring.md](references/authoring.md)       | Shaping the story: outline, acts, timing budget, compression path, speaker notes, the `facts.ts` pattern                |
+| [references/markdown.md](references/markdown.md)         | Authoring text-heavy slides as one `.md` file: grammar, derived beats, themed rendering, when to use JSX instead        |
 | [references/verification.md](references/verification.md) | Before handing off: the check/build gates, the dev-server asset gotcha and its verified fix, offline and browser passes |
 
 ## Start from the supported path

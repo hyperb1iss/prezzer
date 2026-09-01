@@ -39,6 +39,10 @@
       "types": "./dist/motion/animations.d.ts",
       "default": "./dist/motion/animations.js"
     },
+    "./markdown": {
+      "types": "./dist/markdown/index.d.ts",
+      "default": "./dist/markdown/index.js"
+    },
     "./styles.css": "./dist/styles.css",
     "./bun-plugin": "./bun-plugin.ts"
   },
@@ -46,6 +50,7 @@
     "dist",
     "bin",
     "bun-plugin.ts",
+    "markdown-loader.ts",
     "README.md",
     "LICENSE"
   ],

@@ -9,6 +9,7 @@ const result = await Bun.build({
     './src/widgets/registry.tsx',
     './src/theme/tokens.ts',
     './src/motion/animations.ts',
+    './src/markdown/index.tsx',
   ],
   root: './src',
   outdir: './dist',

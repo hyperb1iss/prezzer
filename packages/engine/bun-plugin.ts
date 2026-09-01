@@ -1,7 +1,33 @@
 import type { BunPlugin } from 'bun'
-import { relative, resolve } from 'node:path'
+import { dirname, relative, resolve } from 'node:path'
+import { parseMarkdownDeck } from './markdown-loader'
 
 const peerDependency = /^(?:motion|react|react-dom)(?:\/.*)?$/
+
+// The emitted markdown module must import the runtime factory from wherever
+// it actually lives. Package resolution comes first so a deck's markdown
+// runtime shares module identity with its other prezzer imports, but a hit
+// in Bun's global install cache is rejected (Bun auto-installs published
+// releases to answer bare-directory resolution, and a cache copy is both
+// stale and unable to resolve its own transitive imports). The source tree
+// is the fallback for this repo's own tests and examples-before-build.
+async function resolveMarkdownRuntime(importerDirectory: string): Promise<string> {
+  try {
+    const resolved = Bun.resolveSync('prezzer/markdown', importerDirectory)
+    if (!resolved.includes('/install/cache/') && (await Bun.file(resolved).exists())) {
+      return resolved
+    }
+  } catch {
+    // fall through to the source layout
+  }
+  try {
+    return Bun.resolveSync('./src/markdown/index.tsx', import.meta.dir)
+  } catch {
+    throw new Error(
+      '[prezzer] cannot locate the markdown runtime (prezzer/markdown) — install prezzer in the deck project'
+    )
+  }
+}
 
 /** public/ files the bundler resolved itself; the bake consults this to skip warnings */
 export const bundlerResolvedAssets = new Set<string>()
@@ -9,9 +35,18 @@ export const bundlerResolvedAssets = new Set<string>()
 const prezzerPlugin: BunPlugin = {
   name: 'prezzer',
   setup(builder) {
-    builder.onResolve({ filter: peerDependency }, ({ path }) => ({
-      path: Bun.resolveSync(path, process.cwd()),
-    }))
+    builder.onResolve({ filter: peerDependency }, ({ path }) => {
+      try {
+        const resolved = Bun.resolveSync(path, process.cwd())
+        // A hit in Bun's global install cache means the deck itself does
+        // not have the package; a cache path cannot resolve its own
+        // transitive imports, so let importer-relative resolution run.
+        if (resolved.includes('/install/cache/')) return undefined
+        return { path: resolved }
+      } catch {
+        return undefined
+      }
+    })
 
     // Root-absolute references like url(/fonts/x.woff2) point into public/,
     // which the bundler cannot resolve on its own — in dev that fails the
@@ -37,6 +72,21 @@ const prezzerPlugin: BunPlugin = {
         }
       }
       return undefined
+    })
+
+    // Markdown decks: parse and render at bundle time (Bun.markdown does
+    // not exist in the browser), emit a module that hands the pre-rendered
+    // chunks to the runtime factory.
+    builder.onLoad({ filter: /\.md$/ }, async ({ path }) => {
+      const slides = parseMarkdownDeck(await Bun.file(path).text())
+      const runtime = await resolveMarkdownRuntime(dirname(path))
+      return {
+        contents: [
+          `import { markdownSlides } from ${JSON.stringify(runtime)}`,
+          `export default markdownSlides(${JSON.stringify(slides)})`,
+        ].join('\n'),
+        loader: 'js',
+      }
     })
   },
 }

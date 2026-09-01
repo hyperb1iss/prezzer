@@ -38,6 +38,7 @@ export function App() {
 - `prezzer/chrome` exports the built-in headers, rails, badges, notes, grid, starfield, and art layer.
 - `prezzer/widgets` exports the imperative widget registry.
 - `prezzer/theme` and `prezzer/motion` provide focused imports.
+- `prezzer/markdown` turns pre-rendered markdown slide data into `SlideDef[]`; the bun plugin emits calls to it for `.md` imports.
 - `prezzer/styles.css` contains the framework-free shell and chrome styles.
 - `prezzer/bun-plugin` keeps linked decks on one React and Motion instance and resolves root-absolute `public/` references for both the dev server and the bake.
 

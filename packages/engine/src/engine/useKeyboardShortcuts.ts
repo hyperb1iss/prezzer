@@ -16,6 +16,8 @@ export interface UseKeyboardShortcutsOptions {
   onToggleHelp?: () => void
   /** Returns true if an overlay consumed the Escape */
   onEscape?: () => boolean
+  /** While a modal overlay is open, only dismissal/swap keys may act */
+  modalOpen?: boolean
   /**
    * Pre-advance interceptor for space/right: return true to consume the
    * press instead of advancing. This is how imperative widgets claim the
@@ -31,6 +33,7 @@ export function useKeyboardShortcuts({
   onToggleGrid,
   onToggleHelp,
   onEscape,
+  modalOpen = false,
   onAdvanceIntercept,
   enabled = true,
 }: UseKeyboardShortcutsOptions = {}): void {
@@ -45,6 +48,18 @@ export function useKeyboardShortcuts({
 
     const target = event.target
     if (target instanceof Element && target.closest(interactiveElementSelector)) {
+      return
+    }
+
+    // A modal overlay owns the screen: besides escape and the modal toggles
+    // (which close or swap it), deck keys are swallowed so a stray space
+    // cannot advance the deck behind an aria-modal dialog.
+    if (modalOpen && event.key !== 'Escape' && !/^[g?]$/i.test(event.key)) {
+      const deckKey =
+        [' ', 'ArrowRight', 'ArrowLeft', 'PageDown', 'PageUp', 'Home', 'End'].includes(event.key) ||
+        /^[0-9]$/.test(event.key) ||
+        /^[fndap]$/i.test(event.key)
+      if (deckKey) event.preventDefault()
       return
     }
 

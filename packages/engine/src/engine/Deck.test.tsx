@@ -164,6 +164,27 @@ describe('Deck', () => {
     }
   })
 
+  test('swallows deck keys while a modal is open', async () => {
+    render(<Deck slides={deckWith(EmptySlide)} showProgressRail={false} />)
+    await waitFor(() => expect(window.location.hash).toBe('#1'))
+
+    fireEvent.keyDown(window, { key: 'g' })
+    expect(screen.getByRole('dialog', { name: 'Slide overview' })).toBeTruthy()
+
+    fireEvent.keyDown(window, { key: ' ' })
+    fireEvent.keyDown(window, { key: 'End' })
+    expect(window.location.hash).toBe('#1')
+    expect(screen.getByRole('dialog', { name: 'Slide overview' })).toBeTruthy()
+
+    fireEvent.keyDown(window, { key: '?' })
+    await waitFor(() => expect(screen.getByRole('dialog', { name: 'keyboard' })).toBeTruthy(), {
+      timeout: 8000,
+    })
+
+    fireEvent.keyDown(window, { key: 'n' })
+    expect(document.querySelector('.prezzer-speaker-notes')).toBeNull()
+  }, 15000)
+
   test('grid typeahead jumps to a typed slide number', async () => {
     render(<Deck slides={deckWith(EmptySlide)} showProgressRail={false} />)
 

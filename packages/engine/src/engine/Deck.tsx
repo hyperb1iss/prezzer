@@ -82,6 +82,7 @@ function DeckShell({
     onToggleGrid: () => toggleModal('grid'),
     onToggleHelp: () => toggleModal('help'),
     onEscape: handleEscape,
+    modalOpen: modal !== null,
     onAdvanceIntercept: startNextWidget,
   })
 

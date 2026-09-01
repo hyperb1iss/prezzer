@@ -72,7 +72,7 @@ export function Talk() {
 }
 ```
 
-A beat count includes the initial state: `beats: 2` means one in-slide advance. `<Beat at={n}>` gates ordinary content; `useBeat()` drives diagrams and any scene whose whole state changes together. Dev mode warns when a mounted `<Beat at>` sits past the declared `beats` (that content can never reveal); conditionally rendered Beats can hide from the check, so still verify reveal counts in the built file.
+A beat count includes the initial state: `beats: 2` means one in-slide advance. `<Beat at={n}>` gates ordinary content; `useBeat()` drives diagrams and any scene whose whole state changes together. The engine logs a console warning when a mounted `<Beat at>` sits past the declared `beats` (that content can never reveal); conditionally rendered Beats can hide from the check, so still verify reveal counts in the built file.
 
 ## Shape the story before the components
 

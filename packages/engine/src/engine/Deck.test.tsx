@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from 'bun:test'
+import { afterEach, describe, expect, spyOn, test } from 'bun:test'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { useImperativeHandle, useRef, useState } from 'react'
 import type { SlideDef } from '../types'
@@ -116,6 +116,11 @@ describe('Deck', () => {
     expect(screen.getByText('add your first slide to begin')).toBeTruthy()
   })
 
+  // Overlay exits take several seconds under happy-dom (AnimatePresence
+  // exit completion, not real animation time), so overlay-closing tests
+  // carry explicit timeouts and generous waitFor windows.
+  const overlayExit = { timeout: 8000 }
+
   test('opens the shortcut help overlay on ? and closes it on escape', async () => {
     render(<Deck slides={deckWith(EmptySlide)} showProgressRail={false} />)
 
@@ -123,7 +128,66 @@ describe('Deck', () => {
     expect(screen.getByRole('dialog', { name: 'keyboard' })).toBeTruthy()
 
     fireEvent.keyDown(window, { key: 'Escape' })
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull(), overlayExit)
+  }, 15000)
+
+  test('keeps grid and help mutually exclusive', async () => {
+    render(<Deck slides={deckWith(EmptySlide)} showProgressRail={false} />)
+
+    fireEvent.keyDown(window, { key: '?' })
+    expect(screen.getByRole('dialog', { name: 'keyboard' })).toBeTruthy()
+
+    fireEvent.keyDown(window, { key: 'g' })
+    await waitFor(
+      () => expect(screen.queryByRole('dialog', { name: 'keyboard' })).toBeNull(),
+      overlayExit
+    )
+    expect(screen.getByRole('dialog', { name: 'Slide overview' })).toBeTruthy()
+  }, 15000)
+
+  test('warns in dev when a Beat sits past the declared beat count', () => {
+    const warn = spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const Overdeclared = () => (
+        <Beat at={3}>
+          <p>unreachable</p>
+        </Beat>
+      )
+      render(<Deck slides={deckWith(Overdeclared, 2)} showProgressRail={false} />)
+      const beatWarnings = warn.mock.calls.filter((call) =>
+        String(call[0]).includes('can never reveal')
+      )
+      expect(beatWarnings.length).toBe(1)
+      expect(String(beatWarnings[0]?.[0])).toContain('beats: 4')
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
+  test('grid typeahead jumps to a typed slide number', async () => {
+    render(<Deck slides={deckWith(EmptySlide)} showProgressRail={false} />)
+
+    fireEvent.keyDown(window, { key: 'g' })
+    const grid = screen.getByRole('dialog', { name: 'Slide overview' })
+
+    fireEvent.keyDown(grid, { key: '2' })
+    fireEvent.keyDown(grid, { key: 'Enter' })
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull(), overlayExit)
+    await waitFor(() => expect(screen.getByRole('region', { name: 'second' })).toBeTruthy(), {
+      timeout: 4000,
+    })
+  }, 15000)
+
+  test('grid arrows move focus across slide cards', () => {
+    render(<Deck slides={deckWith(EmptySlide)} showProgressRail={false} />)
+
+    fireEvent.keyDown(window, { key: 'g' })
+    const grid = screen.getByRole('dialog', { name: 'Slide overview' })
+
+    fireEvent.keyDown(grid, { key: 'ArrowRight' })
+    const cards = screen.getAllByRole('button')
+    expect(document.activeElement).toBe(cards[1] as HTMLElement)
   })
 
   test('mirrors position without growing browser history', async () => {

@@ -34,7 +34,7 @@ Defaults below are what `resolveSlide` fills in; the engine always works with th
 | `title`      | `string`                  | required  | Accessible label and grid card title                                                                                                                                                 |
 | `component`  | `ComponentType`           | required  | The slide itself                                                                                                                                                                     |
 | `act`        | `number`                  | `0`       | Groups the progress rail and colors the grid cards; matches an `ActDef.number`                                                                                                       |
-| `beats`      | `number`                  | `1`       | Total in-slide states **including the initial one**; `1` = no in-slide advance                                                                                                       |
+| `beats`      | `number`                  | `1`       | Total in-slide states **including the initial one**; `1` = no in-slide advance. In dev, a mounted `<Beat at>` past the declared range logs a warning naming the count to declare     |
 | `transition` | `TransitionType`          | `"morph"` | See [motion.md](motion.md) for the eight personalities                                                                                                                               |
 | `notes`      | `string[]`                | `[]`      | Speaker notes for the `n` overlay                                                                                                                                                    |
 | `deep`       | `boolean`                 | —         | ▽ deep slide, first to compress when time runs short; marked in notes and grid                                                                                                       |
@@ -74,15 +74,17 @@ The root also exports the shell's building blocks — `useKeyboardShortcuts`, `u
 | `space`, `→`, `pgdn`       | Start the next pending widget, else next beat, else next slide                                 |
 | `←`, `pgup`                | Previous beat, else previous slide **landed fully revealed**                                   |
 | `shift` + advance/back key | Whole slide, skipping beats and widgets — applies to arrows, `space`, `pgup`, and `pgdn` alike |
-| `1`–`9`                    | Jump straight to slides one through nine (grid is random access beyond that)                   |
+| `1`–`9`                    | Jump straight to slides one through nine (the grid is random access beyond that)               |
 | `home`, `end`              | First or last slide                                                                            |
 | `g` / `n` / `f`            | Grid overview / speaker notes / fullscreen                                                     |
 | `d`                        | Deny mode; auto-resets on slide change                                                         |
 | `a`                        | Fire the autoplay signal (increments `autoplaySignal`)                                         |
 | `?`                        | Shortcut help overlay                                                                          |
-| `esc`                      | Close help, then grid, then notes, then exit fullscreen                                        |
+| `esc`                      | Close the open modal, then notes, then exit fullscreen                                         |
 
 Shortcuts are skipped when `meta`, `ctrl`, or `alt` is held (`shift` stays live — it upgrades advances to whole-slide jumps) or when the event target is inside the guard selector: `a`, `button`, `input`, `select`, `textarea`, `video`, `audio`, `summary`, `[role="button"]`, any `[contenteditable]` not set to `"false"`, or anything under `[data-prezzer-interactive]` — browser shortcuts and embedded interactive demos keep working. Mark custom demo surfaces (canvas playgrounds, ARIA widgets) with `data-prezzer-interactive` to keep the deck's hands off them; the same guard applies to touch. Holding a toggle key (`f`/`n`/`g`/`d`/`a`) fires once, not per key-repeat. Page up/down means presenter clickers work unconfigured.
+
+Grid and help are exclusive modals (opening one closes the other); speaker notes are an independent pinned panel that stays open across them. While the grid is open it owns the keyboard: arrows move focus across slide cards (up/down by visual row), typing digits builds a slide number shown in the hint line (`enter` jumps, the buffer clears after 1.5s), and `home`/`end` move focus to the first/last card instead of moving the deck.
 
 Touch shares the exact same ordering guarantees: horizontal swipes past 50px navigate, taps on the outer 20% screen edges step back/forward, and center taps advance. **Every forward gesture — left swipe, right-edge tap, center tap — starts a pending widget before it advances the deck**; backward gestures never do. Taps must be under 300ms with less than 10px of movement, touches starting inside the guard selector above are ignored, multi-finger gestures (pinch/zoom) never navigate, and touch navigation is disabled entirely while the grid or notes overlay is open.
 

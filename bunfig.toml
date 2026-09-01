@@ -1,2 +1,6 @@
+# Bun 1.4's symlinked store: strict dependency isolation, faster warm installs.
+[install]
+linker = "isolated"
+
 [test]
 preload = ["./test/setup.ts"]

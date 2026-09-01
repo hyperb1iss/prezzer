@@ -189,34 +189,22 @@ async function dev(args: string[]) {
   // The exact '/' route outranks the '/*' directory route, and the
   // directory route rejects non-canonical paths, so public/ is served
   // with ETag/304/Range handling and no traversal surface. Bun opens the
-  // directory eagerly, so a deck without public/ gets a guarded fetch
-  // fallback instead — it also covers a public/ created mid-session.
+  // directory eagerly, so a deck without public/ skips the route and
+  // 404s asset paths instead — a hand-rolled fallback would give up the
+  // route's symlink confinement and Range semantics.
   const publicRoot = resolve('public')
   const hasPublicDirectory = await lstat(publicRoot)
     .then((stats) => stats.isDirectory())
     .catch(() => false)
 
-  async function serveFallback(request: Request): Promise<Response> {
-    let pathname: string
-    try {
-      pathname = decodeURIComponent(new URL(request.url).pathname)
-    } catch {
-      return new Response('bad request', { status: 400 })
-    }
-    const assetPath = resolve(publicRoot, pathname.slice(1))
-    if (isWithin(publicRoot, assetPath)) {
-      const asset = Bun.file(assetPath)
-      if (await asset.exists()) return new Response(asset)
-    }
-    return new Response('not found', { status: 404 })
-  }
+  const notFound = () => new Response('not found', { status: 404 })
 
   const serve = (candidatePort: number) => {
     const shared = {
       port: candidatePort,
       hostname,
       development: { hmr: true, console: true },
-      fetch: serveFallback,
+      fetch: notFound,
     }
     return hasPublicDirectory
       ? Bun.serve({ ...shared, routes: { '/': index, '/*': { dir: publicRoot } } })
@@ -243,8 +231,11 @@ async function dev(args: string[]) {
     )
   }
 
+  const assetNote = hasPublicDirectory
+    ? 'public/ served'
+    : 'no public/ yet — restart dev after creating it'
   console.log(
-    `${purple}prezzer${reset} ${muted}dev${reset} ${cyan}${entry}${reset} ${muted}→${reset} ${cyan}${server.url}${reset} ${muted}· hot reload on · public/ served${reset}`
+    `${purple}prezzer${reset} ${muted}dev${reset} ${cyan}${entry}${reset} ${muted}→${reset} ${cyan}${server.url}${reset} ${muted}· hot reload on · ${assetNote}${reset}`
   )
 }
 

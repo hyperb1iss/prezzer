@@ -1,6 +1,7 @@
 import { motion, type Variants } from 'motion/react'
 import type { ReactNode } from 'react'
 import { springs } from '../motion/animations'
+import { useBeatAudit } from './BeatAudit'
 import { useBeat } from './DeckContext'
 
 const defaultVariants: Variants = {
@@ -19,6 +20,7 @@ interface BeatProps {
 /** Beat-gated reveal. Backing up a beat re-hides it. */
 export function Beat({ at, children, className, variants }: BeatProps) {
   const beat = useBeat()
+  useBeatAudit(at)
   const hidden = beat < at
   return (
     <motion.div

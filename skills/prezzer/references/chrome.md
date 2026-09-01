@@ -10,7 +10,7 @@ import {
 } from "prezzer/chrome";
 ```
 
-Two kinds of chrome. **Shell-owned** pieces render automatically — `SpeakerNotes` (`n`), `GridOverview` (`g`), `ShortcutHelp` (`?`), `ProgressRail`, and the `RolloutBadge` stamped from `SlideDef.badge`. **Author-placed** pieces go inside slide components. All of them except `SlideArt` read the deck context, so they only work under `<Deck>` (or a manual `DeckProvider`); `SlideArt` is context-free and renders anywhere.
+Two kinds of chrome. **Shell-owned** pieces render automatically — `SpeakerNotes` (`n`), `GridOverview` (`g`; arrows move card focus, typed digits + `enter` jump), `ShortcutHelp` (`?`), `ProgressRail`, and the `RolloutBadge` stamped from `SlideDef.badge`. Grid and help are exclusive modals; notes stay pinned across them. **Author-placed** pieces go inside slide components. All of them except `SlideArt` read the deck context, so they only work under `<Deck>` (or a manual `DeckProvider`); `SlideArt` is context-free and renders anywhere.
 
 Built-in chrome is plain CSS shipped by `prezzer/styles.css` — it never depends on the deck's styling system. Deck content is free to use Tailwind (the starter wires `bun-plugin-tailwind`), vanilla CSS, or anything else.
 

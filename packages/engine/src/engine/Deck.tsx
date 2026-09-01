@@ -12,6 +12,7 @@ import type { Theme } from '../theme/tokens'
 import { themeToCssVars } from '../theme/tokens'
 import type { ActDef, SlideDef } from '../types'
 import { SlideWidgetProvider, useSlideWidgets } from '../widgets/registry'
+import { BeatAudit } from './BeatAudit'
 import { DeckProvider, useDeck } from './DeckContext'
 import { SlideContainer } from './SlideContainer'
 import { useKeyboardShortcuts } from './useKeyboardShortcuts'
@@ -48,19 +49,20 @@ function DeckShell({
   Pick<DeckProps, 'extraChrome' | 'minScale' | 'maxScale'>) {
   const { slideIndex, direction, next, prev, slides, theme } = useDeck()
   const { startNextWidget } = useSlideWidgets()
+  // Grid and help are exclusive modals (one aria-modal surface at a time);
+  // notes is a pinned panel a presenter keeps open across the whole talk.
+  const [modal, setModal] = useState<'grid' | 'help' | null>(null)
   const [notesOpen, setNotesOpen] = useState(false)
-  const [gridOpen, setGridOpen] = useState(false)
-  const [helpOpen, setHelpOpen] = useState(false)
   const { toggleFullscreen, exitFullscreen, isFullscreen } = useFullscreen()
   const { scale, width, height } = useSlideScale({ designWidth, designHeight, minScale, maxScale })
 
+  const toggleModal = useCallback((which: 'grid' | 'help') => {
+    setModal((current) => (current === which ? null : which))
+  }, [])
+
   const handleEscape = useCallback((): boolean => {
-    if (helpOpen) {
-      setHelpOpen(false)
-      return true
-    }
-    if (gridOpen) {
-      setGridOpen(false)
+    if (modal) {
+      setModal(null)
       return true
     }
     if (notesOpen) {
@@ -72,14 +74,15 @@ function DeckShell({
       return true
     }
     return false
-  }, [helpOpen, gridOpen, notesOpen, isFullscreen, exitFullscreen])
+  }, [modal, notesOpen, isFullscreen, exitFullscreen])
 
   useKeyboardShortcuts({
     onToggleFullscreen: toggleFullscreen,
     onToggleNotes: () => setNotesOpen((open) => !open),
-    onToggleGrid: () => setGridOpen((open) => !open),
-    onToggleHelp: () => setHelpOpen((open) => !open),
+    onToggleGrid: () => toggleModal('grid'),
+    onToggleHelp: () => toggleModal('help'),
     onEscape: handleEscape,
+    modalOpen: modal !== null,
     onAdvanceIntercept: startNextWidget,
   })
 
@@ -87,12 +90,14 @@ function DeckShell({
     if (!startNextWidget()) next()
   }, [next, startNextWidget])
 
+  const overlayOpen = modal !== null || notesOpen
+
   // The overlays own the screen while open: a tap that closes the grid
   // must not also step the deck behind it.
   useTouchNavigation({
     onNext: advance,
     onPrev: prev,
-    enabled: !gridOpen && !notesOpen && !helpOpen,
+    enabled: !overlayOpen,
   })
 
   const def = slides[slideIndex]
@@ -109,8 +114,8 @@ function DeckShell({
     <div className="slide-viewport" style={themeToCssVars(theme)}>
       <div
         className="slide-canvas-wrapper"
-        aria-hidden={gridOpen || notesOpen || helpOpen}
-        inert={gridOpen || notesOpen || helpOpen || undefined}
+        aria-hidden={overlayOpen}
+        inert={overlayOpen || undefined}
         style={{
           width: `${width * scale}px`,
           height: `${height * scale}px`,
@@ -134,7 +139,9 @@ function DeckShell({
               title={def.title}
               transition={def.transition}
             >
-              <SlideComponent />
+              <BeatAudit key={def.id} id={def.id} beats={def.beats}>
+                <SlideComponent />
+              </BeatAudit>
             </SlideContainer>
           </AnimatePresence>
 
@@ -144,11 +151,12 @@ function DeckShell({
       </div>
 
       <AnimatePresence>{notesOpen && <SpeakerNotes />}</AnimatePresence>
-      <AnimatePresence>
-        {gridOpen && <GridOverview onClose={() => setGridOpen(false)} />}
-      </AnimatePresence>
-      <AnimatePresence>
-        {helpOpen && <ShortcutHelp onClose={() => setHelpOpen(false)} />}
+      {/* One AnimatePresence with mode="wait" so a modal swap finishes the
+          old dialog's exit before the replacement mounts — two aria-modal
+          surfaces must never coexist. */}
+      <AnimatePresence mode="wait">
+        {modal === 'grid' && <GridOverview key="grid" onClose={() => setModal(null)} />}
+        {modal === 'help' && <ShortcutHelp key="help" onClose={() => setModal(null)} />}
       </AnimatePresence>
 
       {/* Announces slide changes to screen readers; beats stay quiet. */}

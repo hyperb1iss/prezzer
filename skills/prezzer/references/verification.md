@@ -1,6 +1,6 @@
 # Verification
 
-The built `dist/index.html` is the product. Dev-mode behavior is a draft. Asset serving and font loading genuinely differ between `bun dev` and the artifact, so a deck is only verified when the _built file_ has been driven end to end.
+The built `dist/index.html` is the product. Dev-mode behavior is a draft. Several things, asset serving and font loading among them, genuinely differ between `bun dev` and the artifact, so a deck is only verified when the _built file_ has been driven end to end.
 
 ## Gates
 
@@ -36,7 +36,7 @@ agent-browser operational notes: load the current agent-browser skill and follow
 
 ## Gotcha: plain `bun index.html` swallows runtime `public/` fetches
 
-**Symptom:** images, fetched JSON, or CSS-referenced fonts under `public/` render broken in dev but work in the built file. `curl` shows the tell, because the request returns the page:
+**Symptom:** images, fetched JSON, or CSS-referenced fonts under `public/` render broken in dev but work in the built file. The tell in `curl` is that the request comes back as the page:
 
 ```
 $ curl -sI http://localhost:3000/art/x.png | grep -i content-type

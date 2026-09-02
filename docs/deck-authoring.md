@@ -68,7 +68,7 @@ import slides from "./slides.md";
 <Deck slides={slides} />;
 ```
 
-Slides separate on `---` lines, each may open with a `key: value` frontmatter block (`id`, `title`, `act`, `transition`, `deep`, `badge`, `notes`), and `<!-- beat -->` markers split a slide into reveals — the beat count derives from the markers, so it never drifts. The plugin renders everything at build time with `Bun.markdown`; the artifact ships pre-rendered HTML styled by the theme. Markdown slides are `SlideDef[]`, so they mix freely with JSX slides in one array. Reach for JSX when a slide needs widgets, `useBeat()` scenes, or deny variants.
+Slides separate on `---` lines, each may open with a `key: value` frontmatter block (`id`, `title`, `act`, `transition`, `deep`, `badge`, `notes`; a `beats` key parses but is ignored), and `<!-- beat -->` markers split a slide into reveals. The beat count derives from the markers, so it never drifts. The plugin renders everything at build time with `Bun.markdown`; the artifact ships pre-rendered HTML styled by the theme. Markdown slides are `SlideDef[]`, so they mix freely with JSX slides in one array. Reach for JSX when a slide needs widgets, `useBeat()` scenes, or deny variants.
 
 ## Add imperative widgets
 
@@ -79,16 +79,16 @@ Self-timed demos can claim the next advance before the deck moves on. Implement 
 Prezzer ships SilkCircuit by default. Override only what the talk needs:
 
 ```tsx
-import { createTheme, Deck } from 'prezzer'
+import { createTheme, Deck } from "prezzer";
 
 const theme = createTheme({
   colors: {
-    electricPurple: '#b14cff',
-    background: '#08060f',
+    electricPurple: "#b14cff",
+    background: "#08060f",
   },
-})
+});
 
-<Deck slides={slides} theme={theme} />
+<Deck slides={slides} theme={theme} />;
 ```
 
 Components read the active theme through `useDeckTheme()`. The shell also exposes every token as a `--prezzer-*` custom property for CSS.

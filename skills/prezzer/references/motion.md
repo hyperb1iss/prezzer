@@ -1,6 +1,6 @@
 # Motion
 
-All motion runs on `motion` (Motion for React, a peer dependency). `Deck` wraps everything in `MotionConfig reducedMotion="user"`, which disables **transform and layout** animation for `prefers-reduced-motion` users — slide transitions and beat reveals degrade gracefully with no extra work. It does _not_ silence opacity, color, filter, or shadow animation, so looping ambience (`glowPulse`, `crtFlicker`) and any autoplaying flourish keep running; gate those yourself with `useReducedMotion()` from `motion/react` when the loop is more than a subtle shimmer (the built-in `Starfield` already does).
+All motion runs on `motion` (Motion for React, a peer dependency). `Deck` wraps everything in `MotionConfig reducedMotion="user"`, which disables **transform and layout** animation for `prefers-reduced-motion` users, so slide transitions and beat reveals degrade gracefully with no extra work. It does _not_ silence opacity, color, filter, or shadow animation, so looping ambience (`glowPulse`, `crtFlicker`) and any autoplaying flourish keep running; gate those yourself with `useReducedMotion()` from `motion/react` when the loop is more than a subtle shimmer (the built-in `Starfield` already does).
 
 ```tsx
 import { motion } from "motion/react";
@@ -26,7 +26,7 @@ All are spring-driven except `glitch` (0.25s tween) and `morph` (0.5s tween). Va
 
 ## Spring presets
 
-`springs.snappy` (400/30) · `springs.smooth` (200/25) · `springs.bouncy` (300/20) · `springs.gentle` (100/20) — stiffness/damping, no durations. Spread into any Motion `transition`.
+`springs.snappy` (400/30) · `springs.smooth` (200/25) · `springs.bouncy` (300/20) · `springs.gentle` (100/20). The pairs are stiffness/damping, no durations. Spread into any Motion `transition`.
 
 ## Variant catalog
 
@@ -36,21 +36,21 @@ Ready-made `Variants` for `motion.*` elements. Unless noted, animate `initial="h
 | ---------------------------------- | -------------------------------------------------------------------------- |
 | `fadeInUp`                         | Rise 30px + fade, smooth spring                                            |
 | `scaleIn`                          | Scale from 0.9, bouncy                                                     |
-| `snapIn`                           | Scale down from 1.08 + blur, snappy — hero moments                         |
+| `snapIn`                           | Scale down from 1.08 + blur, snappy. For hero moments                      |
 | `staggerContainer` / `staggerItem` | Parent + children list reveal, 80ms stagger                                |
 | `counterVariants`                  | Stat pop, bouncy with delay                                                |
-| `progressFill`                     | Bar fill; pass progress 0–1 via `custom`                                   |
+| `progressFill`                     | Bar fill; pass progress 0 to 1 via `custom`                                |
 | `checkmarkPop`                     | Delayed scale pop for completion marks                                     |
 | `drawLine`                         | SVG `pathLength` draw over 1.5s                                            |
 | `drawFromCenter`                   | Accent line scaleX from center                                             |
-| `glowPulse`                        | Looping glow breath — states `idle` / `pulse`                              |
+| `glowPulse`                        | Looping glow breath. States `idle` / `pulse`                               |
 | `glowBloom(color, delay?)`         | Factory: glow appears after the element lands                              |
 | `scanSweep`                        | One scanline pass on slide enter                                           |
-| `crtFlicker`                       | Subtle terminal flicker — states `idle` / `flicker`                        |
+| `crtFlicker`                       | Subtle terminal flicker. States `idle` / `flicker`                         |
 | `hoverLift`                        | Not variants: a `whileHover` value (lift + shadow)                         |
 | `typing`                           | Config object: `charDelay` 25ms, `wordDelay` 80ms, `cursorBlinkRate` 800ms |
 
-`getTransitionVariants(type)` and `getTransitionSpring(type)` return the enter/exit variants and spring for any `TransitionType` — needed only by custom shells that replace `SlideContainer`.
+`getTransitionVariants(type)` and `getTransitionSpring(type)` return the enter/exit variants and spring for any `TransitionType`. Only custom shells that replace `SlideContainer` need them.
 
 ```tsx
 <motion.ul variants={staggerContainer} initial="hidden" animate="visible">

@@ -48,7 +48,7 @@ no frontmatter needed; title comes from the first heading.
 
 - Slides separate on lines containing only `---`.
 - A slide may open with a frontmatter block of `key: value` lines closed by another `---`; a leading block belongs to the first slide. Keys: `id`, `title`, `act`, `transition`, `deep`, `badge`, and `notes` (a `- item` list).
-- `<!-- beat -->` on its own line splits the slide into reveal chunks. **The beat count derives from the markers** — a frontmatter `beats:` is ignored, so markdown slides can never drift the way hand-declared counts can.
+- `<!-- beat -->` on its own line splits the slide into reveal chunks. **The beat count derives from the markers.** A frontmatter `beats:` is ignored, so markdown slides can never drift the way hand-declared counts can.
 - Defaults: `id` is positional (`S3`), `title` is the first heading's text.
 - Dividers and beat markers inside code fences (``` or ~~~) are content, never boundaries, so YAML/diff/HTML examples are safe.
 - Frontmatter accepts only the known keys; a block containing any other `key:`-looking line is treated as slide content, so a paragraph starting `warning: ...` cannot eat a slide.
@@ -58,9 +58,9 @@ no frontmatter needed; title comes from the first heading.
 
 Chunks render inside `.prezzer-markdown-slide`, which ships themed typography in `prezzer/styles.css`: display-font headings, 40px body at the 1920×1080 canvas, `strong` in coral, `em` and inline code in cyan, terminal-black code blocks, purple list markers and blockquote bars. Everything reads the `--prezzer-*` custom properties, so `createTheme` overrides apply. Override the classes (`.prezzer-markdown-slide`, `.prezzer-markdown-chunk`) in deck CSS for layout changes.
 
-The runtime factory is importable directly — `markdownSlides(data)` from `prezzer/markdown` — for decks that build slide data another way; each datum carries `{ id, title, beats, notes, chunks }` plus the optional SlideDef fields, where `chunks` are pre-rendered HTML strings gated behind `<Beat>` in order.
+The runtime factory, `markdownSlides(data)` from `prezzer/markdown`, is importable directly for decks that build slide data another way; each datum carries `{ id, title, beats, notes, chunks }` plus the optional SlideDef fields, where `chunks` are pre-rendered HTML strings gated behind `<Beat>` in order.
 
 ## Limits
 
 - Markdown slides are static content: no widgets, no `useBeat()` scenes, no deny variants. Reach for JSX the moment a slide needs behavior.
-- The chunk HTML comes from the author's own file (the same trust boundary as JSX), rendered once at build time — runtime data can't be interpolated into it.
+- The chunk HTML comes from the author's own file (the same trust boundary as JSX), rendered once at build time, so runtime data can't be interpolated into it.

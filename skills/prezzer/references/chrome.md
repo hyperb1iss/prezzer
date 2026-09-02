@@ -10,9 +10,9 @@ import {
 } from "prezzer/chrome";
 ```
 
-Two kinds of chrome. **Shell-owned** pieces render automatically — `SpeakerNotes` (`n`), `GridOverview` (`g`; arrows move card focus, typed digits + `enter` jump), `ShortcutHelp` (`?`), `ProgressRail`, and the `RolloutBadge` stamped from `SlideDef.badge`. Grid and help are exclusive modals; notes stay pinned across them. **Author-placed** pieces go inside slide components. All of them except `SlideArt` read the deck context, so they only work under `<Deck>` (or a manual `DeckProvider`); `SlideArt` is context-free and renders anywhere.
+Two kinds of chrome. **Shell-owned** pieces render automatically: `SpeakerNotes` (`n`), `GridOverview` (`g`; arrows move card focus, typed digits + `enter` jump), `ShortcutHelp` (`?`), `ProgressRail`, and the `RolloutBadge` stamped from `SlideDef.badge`. Grid and help are exclusive modals; notes stay pinned across them. **Author-placed** pieces go inside slide components. All of them except `SlideArt` read the deck context, so they only work under `<Deck>` (or a manual `DeckProvider`); `SlideArt` is context-free and renders anywhere.
 
-Built-in chrome is plain CSS shipped by `prezzer/styles.css` — it never depends on the deck's styling system. Deck content is free to use Tailwind (the starter wires `bun-plugin-tailwind`), vanilla CSS, or anything else.
+Built-in chrome is plain CSS shipped by `prezzer/styles.css`, and it never depends on the deck's styling system. Deck content is free to use Tailwind (the starter wires `bun-plugin-tailwind`), vanilla CSS, or anything else.
 
 ## SlideHeader
 
@@ -49,13 +49,13 @@ Coral stat callouts stacked along the right edge with a staggered entrance. `sta
 
 ## CreedChip
 
-`{ label: string; color?: string }` — neon pill for a design creed, electric purple by default. Use it (or a small custom chip) for badges in running text.
+`{ label: string; color?: string }`. A neon pill for a design creed, electric purple by default. Use it (or a small custom chip) for badges in running text.
 
 ## RolloutBadge
 
 The shell renders this automatically from `SlideDef.badge`; import it directly only in custom chrome. `{ status: string; color?: string; filled?: boolean }`. The built-in vocabulary styles: `GA` (green, filled), `DEV ONLY` (yellow, filled), `NOT ROLLED OUT` (purple, outline), `COMING SOON` (cyan, outline), `IN FLIGHT` (yellow, outline). Any other string renders purple outline; override with `color`/`filled`.
 
-It is a **corner stamp** — absolutely positioned top-right of the canvas. For a badge inside a card or sentence, use `CreedChip` or a custom inline chip instead.
+It is a **corner stamp**, absolutely positioned top-right of the canvas. For a badge inside a card or sentence, use `CreedChip` or a custom inline chip instead.
 
 ## Starfield
 
@@ -66,7 +66,7 @@ It is a **corner stamp** — absolutely positioned top-right of the canvas. For 
 </div>
 ```
 
-`{ count?: number; className?: string; palette?: string[] }` — defaults: 32 stars, cyan/purple/coral from the theme. Star positions are seeded, not random, so renders are deterministic, and the field goes fully still under `prefers-reduced-motion`. It fills its nearest positioned ancestor — give the parent `position: relative`.
+`{ count?: number; className?: string; palette?: string[] }`. Defaults: 32 stars, cyan/purple/coral from the theme. Star positions are seeded, not random, so renders are deterministic, and the field goes fully still under `prefers-reduced-motion`. It fills its nearest positioned ancestor, so give the parent `position: relative`.
 
 ## SlideArt
 
@@ -74,15 +74,15 @@ It is a **corner stamp** — absolutely positioned top-right of the canvas. For 
 <SlideArt src="/art/control-plane.png" scrim="left" opacity={0.9} />
 ```
 
-| Prop       | Type                                      | Default    | Notes                                                                                                                                                         |
-| ---------- | ----------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src`      | `string`                                  | required   | Any image URL; a rooted `public/` path is the offline-safe convention (the bake inlines it) — see the dev-server gotcha in [verification.md](verification.md) |
-| `position` | `string`                                  | `"center"` | CSS `object-position`                                                                                                                                         |
-| `opacity`  | `number`                                  | `1`        |                                                                                                                                                               |
-| `scrim`    | `"left" \| "right" \| "bottom" \| "none"` | `"none"`   | Dark gradient over one edge so slide text stays readable                                                                                                      |
-| `fit`      | `"cover" \| "contain"`                    | `"cover"`  | `contain` keeps the whole illustration                                                                                                                        |
+| Prop       | Type                                      | Default    | Notes                                                                                                                                                        |
+| ---------- | ----------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `src`      | `string`                                  | required   | Any image URL; a rooted `public/` path is the offline-safe convention (the bake inlines it). See the dev-server gotcha in [verification.md](verification.md) |
+| `position` | `string`                                  | `"center"` | CSS `object-position`                                                                                                                                        |
+| `opacity`  | `number`                                  | `1`        |                                                                                                                                                              |
+| `scrim`    | `"left" \| "right" \| "bottom" \| "none"` | `"none"`   | Dark gradient over one edge so slide text stays readable                                                                                                     |
+| `fit`      | `"cover" \| "contain"`                    | `"cover"`  | `contain` keeps the whole illustration                                                                                                                       |
 
-Full-bleed art layer behind slide content with a slow Ken Burns drift. The scrim darkens the named edge to make text readable there — put text **on** the scrimmed edge and keep the image's subject opposite it.
+Full-bleed art layer behind slide content with a slow Ken Burns drift. The scrim darkens the named edge to make text readable there. Put text **on** the scrimmed edge and keep the image's subject opposite it.
 
 ## CSS class inventory
 

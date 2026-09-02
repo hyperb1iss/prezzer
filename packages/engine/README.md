@@ -1,6 +1,6 @@
 # 🎭 prezzer
 
-> _Cinematic presentations as code — Bun-native, React-powered, one offline HTML file._
+> _Cinematic presentations as code. Bun-native, React-powered, one offline HTML file._
 
 [![npm](https://img.shields.io/npm/v/prezzer?logo=npm&logoColor=white&color=e135ff)](https://www.npmjs.com/package/prezzer)
 [![License](https://img.shields.io/github/license/hyperb1iss/prezzer?color=80ffea)](https://github.com/hyperb1iss/prezzer/blob/main/LICENSE)

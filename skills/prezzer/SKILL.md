@@ -1,11 +1,11 @@
 ---
 name: prezzer
-description: Build, edit, verify, or present an interactive Prezzer deck — the Bun-native React presentation engine that compiles a talk into one offline HTML file. Use whenever the work involves a Prezzer deck or a repository scaffolded by `bun create prezzer`, and for any mention of slides, beats, speaker notes, presenter chrome, deck widgets, slide transitions, deck theming, deck outlines, or standalone HTML deck builds, even when prezzer is not named explicitly.
+description: Build, edit, verify, or present an interactive Prezzer deck, the Bun-native React presentation engine that compiles a talk into one offline HTML file. Use whenever the work involves a Prezzer deck or a repository scaffolded by `bun create prezzer`, and for any mention of slides, beats, speaker notes, presenter chrome, deck widgets, slide transitions, deck theming, deck outlines, or standalone HTML deck builds, even when prezzer is not named explicitly.
 ---
 
 # Prezzer decks as software
 
-A Prezzer deck is a small Bun + React application. Slides are components, in-slide reveals are "beats" of a per-slide state machine, and `prezzer build` bakes everything — markup, styles, scripts, images, self-hosted fonts — into a single `dist/index.html` that presents from `file://` with no network.
+A Prezzer deck is a small Bun + React application. Slides are components, in-slide reveals are "beats" of a per-slide state machine, and `prezzer build` bakes everything (markup, styles, scripts, images, self-hosted fonts) into a single `dist/index.html` that presents from `file://` with no network.
 
 This file carries the workflow and the map. The `references/` directory carries exact API tables, verified code patterns, and gotchas; read the file that matches the work before guessing at an API.
 
@@ -30,18 +30,18 @@ bun dev
 
 The generated repository is the contract: `index.html` is the entry, `src/main.tsx` mounts `<Deck>`, `src/slides.tsx` is the deck registry, `src/index.css` wires Tailwind 4 and the font stacks, and `bunfig.toml` registers the serve plugins. Scripts: `bun dev` (serve with HMR), `bun run check` (format, lint, typecheck), `bun run build` (bake the artifact). Keep the registry in `src/slides.tsx` until one file per slide genuinely improves navigation.
 
-## Entry points — import from the right place
+## Entry points: import from the right place
 
 | Import                            | Provides                                                                                                                                   |
 | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | `prezzer`                         | `Deck`, `DeckProvider`, `Beat`, `useBeat`/`useDeck`/`useDenyMode`/`useDeckTheme`, `SlideDef`/`ActDef` types, theme tokens, motion variants |
 | `prezzer/chrome`                  | `SlideHeader`, `StatRail`, `CreedChip`, `RolloutBadge`, `Starfield`, `SlideArt` (plus the shell overlays for custom shells)                |
-| `prezzer/widgets`                 | `DeckWidgetHandle`, `useWidgetRegistration` (plus `SlideWidgetProvider` for manual composition) — **not re-exported from the root**        |
+| `prezzer/widgets`                 | `DeckWidgetHandle`, `useWidgetRegistration` (plus `SlideWidgetProvider` for manual composition). **Not re-exported from the root**         |
 | `prezzer/theme`, `prezzer/motion` | Focused imports of the same tokens and variants the root exports                                                                           |
 | `prezzer/styles.css`              | The shell and chrome styles; import once in the entry                                                                                      |
 | `prezzer/bun-plugin`              | Keeps linked local dev on one React/Motion instance                                                                                        |
 
-The table and the references are curated working sets, not exhaustive export inventories — [references/api.md](references/api.md) and [references/chrome.md](references/chrome.md) go deeper, and `packages/engine/src` is the final word.
+The table and the references are curated working sets, not exhaustive export inventories. [references/api.md](references/api.md) and [references/chrome.md](references/chrome.md) go deeper, and `packages/engine/src` is the final word.
 
 ## Minimal deck
 
@@ -77,14 +77,14 @@ A beat count includes the initial state: `beats: 2` means one in-slide advance. 
 
 ## Shape the story before the components
 
-A strong deck has a factual outline, a timing budget, a narrative arc, a compression path, speaker notes, and explicit demo fallbacks before visual implementation begins. Mark deep-dive slides with `deep: true` so the presenter sees what compresses first. Review every claim against its source repository or live system — slides are visual anchors; narration carries the detail. One load-bearing idea per slide beats shrinking text to fit. The full workflow, including the `facts.ts` single-source pattern for live numbers, is in [references/authoring.md](references/authoring.md).
+A strong deck has a factual outline, a timing budget, a narrative arc, a compression path, speaker notes, and explicit demo fallbacks before visual implementation begins. Mark deep-dive slides with `deep: true` so the presenter sees what compresses first. Review every claim against its source repository or live system. Slides are visual anchors; narration carries the detail. One idea per slide beats shrinking text to fit. The full workflow, including the `facts.ts` single-source pattern for live numbers, is in [references/authoring.md](references/authoring.md).
 
 ## Gotchas that bite fastest
 
 - **Serve with `prezzer dev`, never plain `bun index.html`.** The bare HTML server SPA-fallbacks every unmatched path, so `<img src="/art/x.png">`, `fetch("/shots/a.json")`, and CSS `url(/fonts/x.woff2)` return the HTML page while the bake works fine. The starter's `bun dev` script already runs `prezzer dev`, which serves `public/` correctly; on the npm-published 0.1.0 (which predates the command) use the verified `dev.ts` fallback in [references/verification.md](references/verification.md).
 - **The bake inlines only literal asset paths.** `prezzer build` string-matches rooted paths against the built output; a runtime-constructed path like `` `/art/${id}.png` `` is never inlined and silently breaks offline. Keep asset paths literal.
 - **`<Beat>` wrappers are motion-transformed**, so they become the containing block for absolutely-positioned children. `bottom`-anchoring lands at the wrapper's flow position, not the slide bottom. Prefer flow layout inside beats.
-- **Hash routing is positional and mixed-index.** `#16` is the sixteenth slide, not outline id `S16`, and the beat suffix is 0-indexed — `#4.2` is slide four with two reveals already fired.
+- **Hash routing is positional and mixed-index.** `#16` is the sixteenth slide, not outline id `S16`, and the beat suffix is 0-indexed, so `#4.2` is slide four with two reveals already fired.
 
 ## Verify before handing off
 
@@ -93,4 +93,4 @@ bun run check
 bun run build
 ```
 
-The built `dist/index.html` is the product — open it from `file://` and drive every slide, beat, widget, note, grid entry, and deny state there, not just in dev. Turn networking off once to prove the deck is self-contained. The full checklist, the browser screenshot recipe, and the CLI flags are in [references/verification.md](references/verification.md).
+The built `dist/index.html` is the product. Open it from `file://` and drive every slide, beat, widget, note, grid entry, and deny state there, not just in dev. Turn networking off once to prove the deck is self-contained. The full checklist, the browser screenshot recipe, and the CLI flags are in [references/verification.md](references/verification.md).

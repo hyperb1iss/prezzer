@@ -17,7 +17,7 @@ bun test packages/engine/src/engine/Deck.test.tsx
 bun run typecheck
 ```
 
-Tests run from the repo root or from inside any package — the happy-dom test preload lives in `test/setup.ts` and every workspace member with tests mirrors it through its own `bunfig.toml`.
+Tests run from the repo root or from inside any package. The happy-dom test preload lives in `test/setup.ts`, and every workspace member with tests mirrors it through its own `bunfig.toml`.
 
 Before opening a pull request, run the full check and build. Include the exact commands and results in the pull request description.
 

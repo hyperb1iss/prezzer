@@ -4,7 +4,7 @@
 
 ## What changed
 
-<!-- Name the public behavior and load-bearing implementation choices. -->
+<!-- Name the public behavior and the implementation choices a reviewer needs to evaluate it. -->
 
 ## Verification
 

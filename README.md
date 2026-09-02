@@ -3,7 +3,7 @@
 </h1>
 
 <p align="center">
-  <strong>Cinematic presentations as code — Bun-native, React-powered, one offline HTML file.</strong>
+  <strong>Cinematic presentations as code. Bun-native, React-powered, one offline HTML file.</strong>
 </p>
 
 <p align="center">
@@ -48,25 +48,25 @@
   <img src="docs/images/hello-title.png" alt="The Prezzer reference deck title slide: glowing type over a drifting starfield" width="85%">
 </p>
 
-A Prezzer deck is real software. It lives in its own repository, renders with real React components, and builds to a single HTML file you can present from `file://`, attach to an email, or drop on any static host. No cloud, no export pipeline, no slide-shaped WYSIWYG — just code that performs.
+A Prezzer deck is real software. It lives in its own repository, renders with real React components, and builds to a single HTML file you can present from `file://`, attach to an email, or drop on any static host. No cloud, no export pipeline, no slide-shaped WYSIWYG. Just code that performs.
 
-**See it live:** the [demo deck](https://hyperb1iss.github.io/prezzer/) is Prezzer presenting itself — every claim on screen is the engine running, baked by CI into the exact one-file artifact it describes.
+**See it live:** the [demo deck](https://hyperb1iss.github.io/prezzer/) is Prezzer presenting itself. Every claim on screen is the engine running, baked by CI into the exact one-file artifact it describes.
 
 ## ✨ Features
 
-- 🎬 **Beat-driven slides** — every slide is a little state machine; each press of space reveals the next beat of the story
-- ⚡ **Bun-native end to end** — one runtime for the dev server, Tailwind, TypeScript, tests, and the build
-- 📦 **One-file offline artifact** — `prezzer build` bakes markup, styles, scripts, images, and self-hosted fonts into a single HTML file
-- 🎭 **Presenter chrome built in** — speaker notes, grid overview, shortcut help, act-aware progress rail, and honest rollout badges
-- 🖥️ **Presenter view** — press `p` for a second window with notes, next-slide preview, and a timer; the one HTML file plays both roles, even from `file://`
-- 🖨️ **PDF without dependencies** — open the artifact with `?print` and the browser's print dialog exports every slide as a fully revealed 16:9 page
-- 💫 **Eight slide transitions** — `portal`, `glitch`, `zoom`, `rise`, `spiral`, `morph`, `split`, and `slide`, chosen per slide
-- 📝 **Markdown decks** — author text-heavy slides as one `.md` file; beats derive from `<!-- beat -->` markers and the bake pre-renders everything at build time
-- 🔗 **Hash deep links** — `#4.2` reopens slide four mid-reveal; refresh resumes exactly where you were
-- 🧨 **Deny mode** — one keypress flips slides that read `useDenyMode()` into their authored failure-path variant, made for live security demos
-- 🖱️ **Keyboard, touch, and widgets** — all three advance through the same ordering guarantees, and self-timed demos can claim the spacebar before the deck moves
-- 🌌 **SilkCircuit theme** — electric purple and neon cyan out of the box, fully overridable through design tokens
-- ♿ **Accessibility that ships** — reduced-motion support, screen-reader slide announcements, focus-restoring overlays, and unrevealed beats stay out of the accessibility tree
+- 🎬 **Beat-driven slides:** every slide is a little state machine, and each press of space reveals the next beat of the story
+- ⚡ **Bun-native end to end:** one runtime for the dev server, Tailwind, TypeScript, tests, and the build
+- 📦 **One-file offline artifact:** `prezzer build` bakes markup, styles, scripts, images, and self-hosted fonts into a single HTML file
+- 🎭 **Presenter chrome built in:** speaker notes, grid overview, shortcut help, act-aware progress rail, and honest rollout badges
+- 🖥️ **Presenter view:** press `p` for a second window with notes, next-slide preview, and a timer. The one HTML file plays both roles, even from `file://`
+- 🖨️ **PDF without dependencies:** open the artifact with `?print` and the browser's print dialog exports every slide as a fully revealed 16:9 page
+- 💫 **Eight slide transitions:** `portal`, `glitch`, `zoom`, `rise`, `spiral`, `morph`, `split`, and `slide`, chosen per slide
+- 📝 **Markdown decks:** author text-heavy slides as one `.md` file. Beats derive from `<!-- beat -->` markers and the bake pre-renders everything at build time
+- 🔗 **Hash deep links:** `#4.2` reopens slide four mid-reveal, and refresh resumes exactly where you were
+- 🧨 **Deny mode:** one keypress flips slides that read `useDenyMode()` into their authored failure-path variant, made for live security demos
+- 🖱️ **Keyboard, touch, and widgets:** all three advance through the same ordering guarantees, and self-timed demos can claim the spacebar before the deck moves
+- 🌌 **SilkCircuit theme:** electric purple and neon cyan out of the box, fully overridable through design tokens
+- ♿ **Accessibility that ships:** reduced-motion support, screen-reader slide announcements, focus-restoring overlays, and unrevealed beats stay out of the accessibility tree
 
 ## ⚡ Quick Start
 
@@ -76,7 +76,7 @@ cd my-talk
 bun dev
 ```
 
-That is the entire development setup. `bun dev` runs the Prezzer dev server — hot reload for React and TypeScript, Tailwind through Bun's native plugin, and `public/` assets served in dev. The bake inlines only assets referenced by literal paths, and warns when one isn't.
+That is the entire development setup. `bun dev` runs the Prezzer dev server: hot reload for React and TypeScript, Tailwind through Bun's native plugin, and `public/` assets served in dev. The bake inlines only assets referenced by literal paths, and warns when one isn't.
 
 When the deck is ready:
 
@@ -85,17 +85,17 @@ bun run check
 bun run build
 ```
 
-`dist/index.html` contains the complete presentation — open it from `file://`, attach it to an email, or put it on any static host.
+`dist/index.html` contains the complete presentation. Open it from `file://`, attach it to an email, or put it on any static host.
 
 ## 🤖 Agent Fast Path
 
-Building with Claude Code or another coding agent? One command teaches it the whole system — the authoring workflow, the full API reference, and the gotchas we hit so your agent doesn't have to:
+Building with Claude Code or another coding agent? One command teaches it the whole system: the authoring workflow, the full API reference, and the gotchas we hit so your agent doesn't have to.
 
 ```bash
 npx skills add hyperb1iss/prezzer
 ```
 
-No installer handy? Paste [skills/prezzer/SKILL.md](skills/prezzer/SKILL.md) at your agent — it links everything else it needs.
+No installer handy? Paste [skills/prezzer/SKILL.md](skills/prezzer/SKILL.md) at your agent. It links everything else it needs.
 
 ## 🎬 Slides Are Components
 
@@ -140,7 +140,7 @@ export function Talk() {
 | `space`, `→`, `pgdn` | next beat, widget, or slide         |
 | `←`, `pgup`          | previous beat or slide              |
 | `shift` + arrow      | skip a whole slide                  |
-| `1`–`9`              | jump straight to a slide            |
+| `1` to `9`           | jump straight to a slide            |
 | `home`, `end`        | first or last slide                 |
 | `g`                  | grid overview                       |
 | `n`                  | speaker notes                       |
@@ -152,7 +152,7 @@ export function Talk() {
 
 Page up and page down mean presenter clickers work out of the box.
 
-Touch works everywhere the keyboard does: swipe to navigate, tap the edges to step, tap the center to advance. Imperative widgets register with the deck and claim the next advance before the slide moves on — live demos run on your cue, not on a timer.
+Touch works everywhere the keyboard does: swipe to navigate, tap the edges to step, tap the center to advance. Imperative widgets register with the deck and claim the next advance before the slide moves on, so live demos run on your cue, not on a timer.
 
 <p align="center">
   <img src="docs/images/hello-deny.png" alt="Deny mode showing a glowing DENIED state with the speaker notes overlay open" width="85%">
@@ -169,7 +169,7 @@ prezzer baking index.html
 ✓ dist/index.html · 361.0 KB · 235ms · one file, works offline
 ```
 
-The build compiles the deck with Bun's browser bundler and inlines every referenced `public/` asset — images and self-hosted fonts included — as data URIs. The file needs no server and keeps presenting when the network disappears: the starter's CDN display fonts fall back to system type offline, and [self-hosting them](docs/deck-authoring.md#fonts) bakes the full typography into the artifact for true airplane mode.
+The build compiles the deck with Bun's browser bundler and inlines every referenced `public/` asset, images and self-hosted fonts included, as data URIs. The file needs no server and keeps presenting when the network disappears: the starter's CDN display fonts fall back to system type offline, and [self-hosting them](docs/deck-authoring.md#fonts) bakes the full typography into the artifact for true airplane mode.
 
 ## 🌌 Themes and Motion
 
@@ -185,7 +185,7 @@ const theme = createTheme({
 <Deck slides={slides} theme={theme} />;
 ```
 
-Components read the active theme with `useDeckTheme()`, and every token doubles as a `--prezzer-*` CSS custom property. Motion is physics-based — spring presets and reveal variants live in `prezzer/motion`, and every transition respects `prefers-reduced-motion`.
+Components read the active theme with `useDeckTheme()`, and every token doubles as a `--prezzer-*` CSS custom property. Motion is physics-based. Spring presets and reveal variants live in `prezzer/motion`, and every transition respects `prefers-reduced-motion`.
 
 ## 🧩 Packages
 
@@ -193,17 +193,17 @@ Components read the active theme with `useDeckTheme()`, and every token doubles 
 | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | [`prezzer`](packages/engine)                | The React engine: deck shell, presenter chrome, theme tokens, motion primitives, widget registry, and the `prezzer build` CLI |
 | [`create-prezzer`](packages/create-prezzer) | Powers `bun create prezzer` and owns the starter deck                                                                         |
-| [`examples/hello`](examples/hello)          | The reference deck — exercises the published package boundary and the complete build path                                     |
-| [`examples/demo`](examples/demo)            | The showcase deck — Prezzer presenting itself, deployed to [GitHub Pages](https://hyperb1iss.github.io/prezzer/) by CI        |
+| [`examples/hello`](examples/hello)          | The reference deck. Exercises the published package boundary and the complete build path                                      |
+| [`examples/demo`](examples/demo)            | The showcase deck. Prezzer presenting itself, deployed to [GitHub Pages](https://hyperb1iss.github.io/prezzer/) by CI         |
 
 The built-in chrome is framework-free CSS. Decks can use Tailwind, vanilla CSS, CSS modules, or any other styling approach without changing the engine.
 
 ## 📚 Learn the System
 
-- [Deck authoring](docs/deck-authoring.md) — slides, acts, beats, widgets, themes, and fonts
-- [Engine package](packages/engine/README.md) — entry points and the build CLI
-- [Scaffolder package](packages/create-prezzer/README.md) — `bun create prezzer` options
-- [Release process](docs/releasing.md) — trusted publishing via GitHub OIDC
+- [Deck authoring](docs/deck-authoring.md): slides, acts, beats, widgets, themes, and fonts
+- [Engine package](packages/engine/README.md): entry points and the build CLI
+- [Scaffolder package](packages/create-prezzer/README.md): `bun create prezzer` options
+- [Release process](docs/releasing.md): trusted publishing via GitHub OIDC
 - [Security policy](SECURITY.md)
 
 ## 💜 Contributing
@@ -214,7 +214,7 @@ bun run check
 bun run build
 ```
 
-A clean clone needs Bun and those three commands — that's the whole contributor setup. Read the [contributing guide](CONTRIBUTING.md) for the development loop and change-shape expectations.
+A clean clone needs Bun and those three commands. That's the whole contributor setup. Read the [contributing guide](CONTRIBUTING.md) for the development loop and change-shape expectations.
 
 ## 📄 License
 

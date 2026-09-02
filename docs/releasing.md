@@ -7,11 +7,21 @@
 1. Update both package versions and the scaffolder's default engine spec in `packages/create-prezzer/src/index.ts`. A test asserts the default matches the engine version, so `bun test` catches a missed bump. (`PREZZER_PACKAGE_SPEC` overrides the default for local smoke tests against a tarball.)
 2. Run `bun install` to refresh `bun.lock`.
 3. Run `bun run check` and `bun run build`.
-4. Pack both packages and run the tarball scaffolding smoke test before publishing.
+4. Dry-run pack both packages and read the file lists.
+5. Scaffold one deck against a real engine tarball and gate it.
 
 ```bash
 bun pm pack --dry-run --cwd packages/engine
 bun pm pack --dry-run --cwd packages/create-prezzer
+```
+
+`--dry-run` writes nothing, so the scaffolding smoke test needs a real pack. Point the scaffolder's `PREZZER_PACKAGE_SPEC` override at the tarball and run the local scaffolder:
+
+```bash
+bun pm pack --cwd packages/engine --destination /tmp/prezzer-pack
+PREZZER_PACKAGE_SPEC=file:/tmp/prezzer-pack/prezzer-X.Y.Z.tgz \
+  bun packages/create-prezzer/src/index.ts /tmp/smoke-talk
+cd /tmp/smoke-talk && bun run check && bun run build
 ```
 
 ## Release notes

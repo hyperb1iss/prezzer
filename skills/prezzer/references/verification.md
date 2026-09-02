@@ -15,7 +15,7 @@ Run the narrow gate while editing; run both before handing off.
 
 `prezzer dev [entry] [--port <n>] [--host <name>]` is the hot-reload dev server that also serves `public/`, on `127.0.0.1:1609` by default (1609 because 16:9). `--port` beats `$BUN_PORT`/`$PORT`/`$NODE_PORT`, which beat the default; `--host` exposes beyond loopback. When the default port is busy the server walks up to nine ports forward; an explicit `--port` fails instead of walking. The starter's `bun dev` script runs this.
 
-`prezzer build [entry] [--outdir <dir>] [--no-minify]` defaults to `index.html` and `dist`. `--outdir` must be inside the project and can't contain the entry. Use `--no-minify` when diagnosing what landed in the artifact. `prezzer --version` prints the engine version.
+`prezzer build [entry] [--outdir <dir>] [--no-minify]` defaults to `index.html` and `dist`. `--outdir` must be inside the project and can't contain the entry. Use `--no-minify` when diagnosing what landed in the artifact. `prezzer --version` (or `-v`) prints the engine version.
 
 ## The built-file pass
 

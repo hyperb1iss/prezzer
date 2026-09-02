@@ -135,20 +135,20 @@ export function Talk() {
 
 ## 🎪 Present Like You Mean It
 
-| Key                  | Action                              |
-| -------------------- | ----------------------------------- |
-| `space`, `→`, `pgdn` | next beat, widget, or slide         |
-| `←`, `pgup`          | previous beat or slide              |
-| `shift` + arrow      | skip a whole slide                  |
-| `1` to `9`           | jump straight to a slide            |
-| `home`, `end`        | first or last slide                 |
-| `g`                  | grid overview                       |
-| `n`                  | speaker notes                       |
-| `f`                  | fullscreen                          |
-| `d`                  | deny mode for failure-path demos    |
-| `a`                  | fire the autoplay signal to widgets |
-| `?`                  | shortcut help overlay               |
-| `p`                  | presenter window with notes + timer |
+| Key                   | Action                              |
+| --------------------- | ----------------------------------- |
+| `space`, `→`, `pgdn`  | next beat, widget, or slide         |
+| `←`, `pgup`           | previous beat or slide              |
+| `shift` + advance key | skip a whole slide                  |
+| `1` to `9`            | jump straight to a slide            |
+| `home`, `end`         | first or last slide                 |
+| `g`                   | grid overview                       |
+| `n`                   | speaker notes                       |
+| `f`                   | fullscreen                          |
+| `d`                   | deny mode for failure-path demos    |
+| `a`                   | fire the autoplay signal to widgets |
+| `?`                   | shortcut help overlay               |
+| `p`                   | presenter window with notes + timer |
 
 Page up and page down mean presenter clickers work out of the box.
 

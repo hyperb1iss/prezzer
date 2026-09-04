@@ -10,6 +10,6 @@ if (!root) throw new Error('missing #root')
 
 createRoot(root).render(
   <StrictMode>
-    <Deck slides={slides} acts={acts} />
+    <Deck slides={slides} acts={acts} showScanlines={false} />
   </StrictMode>
 )

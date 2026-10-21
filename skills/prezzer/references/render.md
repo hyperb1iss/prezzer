@@ -42,7 +42,7 @@ The deck argument decides whether a bake happens. A source entry (an HTML file w
 
 Flags beat the timeline file, which beats the defaults.
 
-The MP4 encodes into a hidden sibling file and is renamed over `--out` only after ffmpeg finishes cleanly. A failed render, Ctrl+C, or a kill removes the partial file and leaves the previous `--out` untouched; an interrupted render exits 130. The `--out` directory must already exist and be writable, which is checked before any browser starts. An interrupted `--frames` render removes the frames it wrote. On a terminal, progress is one live line; anywhere else (an agent, a CI log) it prints a plain `prezzer filming 120/456` line every five seconds.
+The MP4 encodes into a hidden sibling file and is renamed over `--out` only after ffmpeg finishes cleanly. A failed render, Ctrl+C, or a kill (SIGINT or SIGTERM, sent once or repeatedly) removes the partial file and leaves the previous `--out` untouched; an interrupted render exits 130 within a few seconds. SIGKILL and power loss give no chance to clean up and can leave a `.name.mp4.<pid>.partial.mp4` file behind; the next render beside that `--out` removes partials whose process is gone. The `--out` directory must already exist and be writable, which is checked before any browser starts. An interrupted `--frames` render removes the frames it wrote. On a terminal, progress is one live line; anywhere else (an agent, a CI log) it prints a plain `prezzer filming 120/456` line every five seconds.
 
 ## Timeline file
 
@@ -78,7 +78,7 @@ The Chromium that playwright-core 1.64 installs is a Chrome for Testing build an
 
 The page runs on the renderer's clock: timers, animation frames, `Date`, and `performance.now()` advance only between frames, every timer fires at its exact due time with the page settled before the next, every Web Animation and CSS animation is pinned to film time (including `reverse()` and playback-rate changes), `Math.random` and `crypto.getRandomValues` are seeded, and fonts and images finish decoding before any frame shows them.
 
-Page state is exact across runs and across worker counts, and the per-frame checks in the film step enforce it. Pixels are almost exact. GPU rasterization of blurred glows and of text on an animating layer can wobble by a few color levels, and how often that shows up depends on the run. Measured on a 456-frame 1080p render of a real talk (title, beat reveals, a rolling H.264 clip):
+Page state matches across runs and across worker counts, and the per-frame checks in the film step catch drift: every worker compares each frame's DOM mutation count and running-animation count with the plan. Pixels are almost exact. GPU rasterization of blurred glows and of text on an animating layer can wobble by a few color levels, and how often that shows up depends on the run. Measured on a 456-frame 1080p render of a real talk (title, beat reveals, a rolling H.264 clip):
 
 | Comparison                        | Byte-identical frames | Worst frame, pixels off by more than 32 levels |
 | --------------------------------- | --------------------- | ---------------------------------------------- |
@@ -86,7 +86,7 @@ Page state is exact across runs and across worker counts, and the per-frame chec
 | Two other runs, 4 workers each    | 432 of 456            | 5 pixels (0.0002%)                             |
 | One run with 1 worker, one with 4 | 428 of 456            | 326 pixels (0.016%), at most 45 levels         |
 
-So runs at the same worker count are usually byte-identical, and worker counts differ only by glow-level noise. The repository's render test films the same range with one worker and with two and allows up to 1% of a frame's pixels to move by more than 32 levels. That tolerance only guards pixels: divergent page state fails the render itself, because every worker checks each frame against the plan. MP4 files are never bit-identical across runs, because x264 carries even one-level noise through a group of pictures.
+So runs at the same worker count are usually byte-identical, and worker counts differ only by glow-level noise. The repository's render test films the same range with one worker and with two and allows up to 1% of a frame's pixels to move by more than 32 levels. That tolerance only guards pixels; drift in page state usually fails the render first, through the per-frame checks. The encode itself is deterministic: when every frame matches, the MP4 is bit-identical too. When a frame differs by even one level, the MP4 bytes differ from there to the next keyframe, so compare frames rather than MP4 hashes.
 
 Things a deck can do that break this: fetching data from the network at runtime, animating a `<canvas>` from a source other than `requestAnimationFrame` and timers, or reading real time from somewhere the clock does not cover. Known uncovered sources: a `Worker` or an iframe, `Intl.DateTimeFormat().format()` called with no date (it reads the real clock internally), `performance.timeOrigin`, `event.timeStamp`, and `document.timeline.currentTime`. The bake inlines assets, so a normally built deck rarely touches any of these.
 

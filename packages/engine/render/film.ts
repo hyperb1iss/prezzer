@@ -771,6 +771,14 @@ export async function startFilm(page: Page, capture: CaptureOptions = {}): Promi
   // page pays one discarded capture before film time starts.
   await screenshot(session, capture)
   await call(page, { method: 'ready' })
+  // A screenshot in flight when the browser closes never settles on its own,
+  // which would strand an interrupted render before it can clean up.
+  const closed = new Promise<never>((_, reject) => {
+    const gone = () => reject(new Error('the page closed during capture'))
+    page.once('close', gone)
+    page.context().once('close', gone)
+  })
+  closed.catch(() => undefined)
   let time = 0
   return {
     page,
@@ -782,7 +790,7 @@ export async function startFilm(page: Page, capture: CaptureOptions = {}): Promi
       time = step.time
       return step
     },
-    capture: () => screenshot(session, capture),
+    capture: () => Promise.race([screenshot(session, capture), closed]),
     async watch(selector) {
       await page.evaluate((value) => {
         const runtime = (window as Window & { __prezzerFilm?: FilmRuntime }).__prezzerFilm

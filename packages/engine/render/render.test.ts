@@ -93,10 +93,12 @@ describe.skipIf(!ready)('prezzer render', () => {
     if (scratch) await rm(scratch, { recursive: true, force: true })
   })
 
-  // Page state is exact at any worker count: every worker also checks each
-  // frame against the plan. Pixels are byte-identical across runs at the same
-  // worker count, but a different count can shift GPU glow raster slightly,
-  // so this comparison allows that noise and nothing larger.
+  // Page state matches at any worker count, and every worker compares each
+  // frame's mutation and running-animation counts with the plan to catch
+  // drift. Pixels are usually but not always byte-identical between runs:
+  // GPU glow raster can wobble at any worker count (measured 432 and 456 of
+  // 456 frames identical for two same-count pairs, 428 for one worker
+  // against four), so this comparison allows that noise and nothing larger.
   test('films the same frames with one worker and two, within GPU raster noise', async () => {
     // Slide 4 reveals beats; slide 5 is a push widget that runs on its own timers.
     // Slide 5 holds long enough for its widget to mount before the advance.
@@ -114,10 +116,10 @@ describe.skipIf(!ready)('prezzer render', () => {
     const b = decodeFrames(parallel, second.width, second.height)
     expect(a.length).toBe(first.frames)
     expect(b.length).toBe(first.frames)
-    // Divergent page state already fails the render (every worker checks each
-    // frame against the plan), so this guards only the pixels. GPU raster is
-    // not exact: blurred glows wobble a few levels and text on an animating
-    // layer can antialias differently, on well under 1% of a frame.
+    // Drift in page state usually fails the render first, through the
+    // per-frame checks, so this guards only the pixels. GPU raster is not
+    // exact: blurred glows wobble a few levels and text on an animating layer
+    // can antialias differently, on well under 1% of a frame.
     const visible = a
       .map((frame, index) => ({ index, share: changedShare(frame, b[index] as Uint8Array, 32) }))
       .filter(({ share }) => share >= 0.01)
@@ -164,6 +166,38 @@ describe.skipIf(!ready)('prezzer render', () => {
       },
     })
     await expect(render).rejects.toThrow('interrupted')
+    expect(await readFile(out, 'utf8')).toBe('the last good render')
+    expect((await readdir(scratch)).filter((name) => name.includes('partial'))).toEqual([])
+  }, 120_000)
+
+  test('a second signal during cleanup cannot leave a partial file behind', async () => {
+    const out = join(scratch, 'twice.mp4')
+    await writeFile(out, 'the last good render')
+    const cli = Bun.spawn(
+      [
+        'bun',
+        join(engineRoot, 'bin/prezzer.ts'),
+        'render',
+        deck,
+        ...['--slides', '1', '--hold', '2', '--fps', '15', '--scale', '0.5', '--workers', '1'],
+        ...['--out', out],
+      ],
+      { stdout: 'ignore', stderr: 'pipe' }
+    )
+    // Off a terminal, progress arrives as plain lines; wait for filming.
+    let log = ''
+    for await (const chunk of cli.stderr) {
+      log += new TextDecoder().decode(chunk)
+      if (/prezzer filming \d+\//.test(log)) break
+    }
+    // An impatient double Ctrl+C, or GNU timeout, sends the signal twice.
+    cli.kill('SIGINT')
+    cli.kill('SIGINT')
+    // A hung render must fail this test, never outlive it.
+    const watchdog = setTimeout(() => cli.kill('SIGKILL'), 60_000)
+    const code = await cli.exited
+    clearTimeout(watchdog)
+    expect(code).toBe(130)
     expect(await readFile(out, 'utf8')).toBe('the last good render')
     expect((await readdir(scratch)).filter((name) => name.includes('partial'))).toEqual([])
   }, 120_000)

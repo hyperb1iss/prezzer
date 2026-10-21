@@ -20,6 +20,8 @@ export {
   openFrameDirectory,
   openVideoSink,
   orderedSink,
+  partialPath,
+  sweepStalePartials,
   type VideoOptions,
   videoArguments,
 } from './encoder'

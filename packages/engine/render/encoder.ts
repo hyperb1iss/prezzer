@@ -1,6 +1,6 @@
 import { type ChildProcess, spawn, spawnSync } from 'node:child_process'
 import { once } from 'node:events'
-import { mkdir, rename, rm, writeFile } from 'node:fs/promises'
+import { mkdir, readdir, rename, rm, writeFile } from 'node:fs/promises'
 import { basename, dirname, extname, join } from 'node:path'
 
 /** Receives PNG frames in film order. */
@@ -88,6 +88,34 @@ export function videoArguments({ out, fps, crf = 18 }: VideoOptions): string[] {
  */
 export function partialPath(out: string): string {
   return join(dirname(out), `.${basename(out)}.${process.pid}.partial${extname(out)}`)
+}
+
+const partialName = /^\.(.+)\.(\d+)\.partial(\.[^.]+)?$/
+
+function alive(pid: number): boolean {
+  try {
+    process.kill(pid, 0)
+    return true
+  } catch (error) {
+    // EPERM means the process exists but belongs to someone else.
+    return (error as NodeJS.ErrnoException).code === 'EPERM'
+  }
+}
+
+/**
+ * Removes partial encodes left beside `out` by renders that died without
+ * cleaning up (SIGKILL, a power cut). A partial whose process is still
+ * alive belongs to a running render and is left alone.
+ */
+export async function sweepStalePartials(out: string): Promise<string[]> {
+  const directory = dirname(out)
+  const names = await readdir(directory).catch(() => [])
+  const stale = names.filter((name) => {
+    const match = partialName.exec(name)
+    return match?.[2] !== undefined && !alive(Number(match[2]))
+  })
+  await Promise.all(stale.map((name) => rm(join(directory, name), { force: true })))
+  return stale.map((name) => join(directory, name))
 }
 
 /**

@@ -3,7 +3,14 @@ import { spawnSync } from 'node:child_process'
 import { mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { type FrameSink, openVideoSink, orderedSink, partialPath, videoArguments } from './encoder'
+import {
+  type FrameSink,
+  openVideoSink,
+  orderedSink,
+  partialPath,
+  sweepStalePartials,
+  videoArguments,
+} from './encoder'
 
 function memorySink() {
   const frames: number[] = []
@@ -145,5 +152,28 @@ describe.skipIf(!hasFfmpeg)('openVideoSink output safety', () => {
     await sink.abort()
     expect(await readFile(out, 'utf8')).toBe(previous)
     expect(await leftovers()).toEqual([])
+  })
+})
+
+describe('sweepStalePartials', () => {
+  test('removes partials left by dead renders and keeps live ones and real files', async () => {
+    const scratch = await mkdtemp(join(tmpdir(), 'prezzer-sweep-test-'))
+    try {
+      // A process that has exited is a dead render's pid.
+      const finished = Bun.spawnSync(['true'])
+      const dead = finished.pid
+      const out = join(scratch, 'talk.mp4')
+      await writeFile(out, 'the last good render')
+      await writeFile(join(scratch, `.talk.mp4.${dead}.partial.mp4`), 'abandoned')
+      await writeFile(join(scratch, `.other.mp4.${dead}.partial.mp4`), 'abandoned too')
+      await writeFile(join(scratch, `.talk.mp4.${process.pid}.partial.mp4`), 'still encoding')
+      const removed = await sweepStalePartials(out)
+      expect(removed.length).toBe(2)
+      expect((await readdir(scratch)).sort()).toEqual(
+        [`.talk.mp4.${process.pid}.partial.mp4`, 'talk.mp4'].sort()
+      )
+    } finally {
+      await rm(scratch, { recursive: true, force: true })
+    }
   })
 })

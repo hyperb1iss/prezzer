@@ -183,10 +183,17 @@ export async function render(args: string[], { bake, fail }: CliHooks) {
   const progress = progressLine()
   // Ctrl+C or a kill stops the render cleanly: the partial output is
   // removed and the previous file at --out survives.
+  // The handlers stay registered until cleanup ends: a second signal (an
+  // impatient double Ctrl+C, or GNU timeout) must not fall through to the
+  // default action and kill the process before the partial is removed.
   const interrupt = new AbortController()
-  const onSignal = () => interrupt.abort()
-  process.once('SIGINT', onSignal)
-  process.once('SIGTERM', onSignal)
+  const onSignal = (name: NodeJS.Signals) => {
+    if (interrupt.signal.aborted) return
+    console.error(`${muted}${name}: stopping and removing the partial output${reset}`)
+    interrupt.abort()
+  }
+  process.on('SIGINT', onSignal)
+  process.on('SIGTERM', onSignal)
   try {
     const result = await renderDeck({
       file: built,

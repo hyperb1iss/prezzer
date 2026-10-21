@@ -10,6 +10,7 @@ import {
   openFrameDirectory,
   openVideoSink,
   orderedSink,
+  sweepStalePartials,
 } from './encoder'
 import { type Film, prepareFilm, startFilm } from './film'
 import {
@@ -385,6 +386,24 @@ export async function shootPlan(
   }
 }
 
+/**
+ * Rejects five seconds after `signal` aborts. Racing work against it bounds
+ * how long an interrupted render can wait on a browser call that never
+ * settles (a screenshot in flight when the browser closed), so cleanup
+ * always runs.
+ */
+function unwindDeadline(signal: AbortSignal | undefined): Promise<never> {
+  const deadline = new Promise<never>((_, reject) => {
+    signal?.addEventListener(
+      'abort',
+      () => setTimeout(() => reject(new RenderError('render interrupted')), 5000).unref(),
+      { once: true }
+    )
+  })
+  deadline.catch(() => undefined)
+  return deadline
+}
+
 /** Fails before any browser starts when the output cannot be written. */
 async function checkOutput(options: RenderOptions) {
   if (options.frames) {
@@ -404,6 +423,7 @@ async function checkOutput(options: RenderOptions) {
   await access(parent, constants.W_OK).catch(() => {
     throw new RenderError(`cannot write to ${parent}: it must exist and be writable`)
   })
+  await sweepStalePartials(options.out)
   return options.out
 }
 
@@ -420,6 +440,7 @@ export async function renderDeck(options: RenderOptions): Promise<RenderResult> 
   // render unwinds (and removes its partial output) promptly.
   const stop = () => void browser.close().catch(() => undefined)
   signal?.addEventListener('abort', stop, { once: true })
+  const deadline = unwindDeadline(signal)
   try {
     const shape = await probeDeck(browser, url)
     const width = shape.width * timeline.scale
@@ -427,18 +448,21 @@ export async function renderDeck(options: RenderOptions): Promise<RenderResult> 
     if (!options.frames && (!Number.isInteger(width / 2) || !Number.isInteger(height / 2))) {
       throw new RenderError(`H.264 needs even dimensions; ${width}x${height} is not`)
     }
-    const plan = await planRender(browser, url, shape, timeline, options)
+    const plan = await Promise.race([planRender(browser, url, shape, timeline, options), deadline])
     if (plan.frames === 0) throw new RenderError('the timeline produced no frames')
     const sink = options.frames
       ? await openFrameDirectory(options.frames)
       : openVideoSink({ out: output, fps: timeline.fps, crf: options.crf })
     try {
-      await shootPlan(browser, url, plan, timeline, sink, {
-        workers: options.workers ?? defaultWorkers(),
-        seed: options.seed,
-        onProgress: options.onProgress,
-        signal,
-      })
+      await Promise.race([
+        shootPlan(browser, url, plan, timeline, sink, {
+          workers: options.workers ?? defaultWorkers(),
+          seed: options.seed,
+          onProgress: options.onProgress,
+          signal,
+        }),
+        deadline,
+      ])
       signal?.throwIfAborted()
       await sink.close()
     } catch (error) {

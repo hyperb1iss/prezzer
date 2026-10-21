@@ -74,25 +74,39 @@ function formatSize(bytes: number): string {
   return `${(bytes / 1024).toFixed(1)} KB`
 }
 
+/**
+ * A live status line on a terminal; elsewhere (an agent, a CI log) a plain
+ * line every few seconds, so a long render visibly advances without
+ * flooding the log.
+ */
 function progressLine() {
   const live = process.stderr.isTTY
   let last = 0
   let startedAt = 0
+  let phase: RenderProgress['phase'] | null = null
   return {
-    update({ phase, frame, frames }: RenderProgress) {
-      if (!live) return
+    update(progress: RenderProgress) {
       const now = performance.now()
-      if (now - last < 100 && frame !== frames) return
+      const changed = progress.phase !== phase
+      const finished = progress.phase === 'film' && progress.frame === progress.frames
+      if (!changed && !finished && now - last < (live ? 100 : 5000)) return
       last = now
-      if (phase === 'plan') {
-        process.stderr.write(`\r\x1b[2K${muted}planning · ${frame} frames${reset}`)
+      phase = progress.phase
+      if (progress.phase === 'plan') {
+        const text = `planning · ${progress.frame} frames`
+        process.stderr.write(live ? `\r\x1b[2K${muted}${text}${reset}` : `prezzer ${text}\n`)
         return
       }
       startedAt ||= now
-      const rate = frame / Math.max((now - startedAt) / 1000, 0.001)
-      const eta = Math.max(0, Math.round((frames - frame) / Math.max(rate, 0.001)))
+      // A rate needs a second of filming behind it before it means anything.
+      const elapsed = (now - startedAt) / 1000
+      const rate = elapsed >= 1 ? progress.frame / elapsed : 0
+      const eta = rate > 0 ? Math.round((progress.frames - progress.frame) / rate) : 0
+      const pace = rate > 0 ? ` · ${rate.toFixed(1)} fps · ${eta}s left` : ''
       process.stderr.write(
-        `\r\x1b[2K${purple}filming${reset} ${cyan}${frame}/${frames}${reset} ${muted}· ${rate.toFixed(1)} fps · ${eta}s left${reset}`
+        live
+          ? `\r\x1b[2K${purple}filming${reset} ${cyan}${progress.frame}/${progress.frames}${reset}${muted}${pace}${reset}`
+          : `prezzer filming ${progress.frame}/${progress.frames}${pace}\n`
       )
     },
     done() {

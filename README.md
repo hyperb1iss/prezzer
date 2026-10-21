@@ -60,6 +60,7 @@ A Prezzer deck is real software. It lives in its own repository, renders with re
 - 🎭 **Presenter chrome built in:** speaker notes, grid overview, shortcut help, act-aware progress rail, and honest rollout badges
 - 🖥️ **Presenter view:** press `p` for a second window with notes, next-slide preview, and a timer. The one HTML file plays both roles, even from `file://`
 - 🖨️ **PDF without dependencies:** open the artifact with `?print` and the browser's print dialog exports every slide as a fully revealed 16:9 page
+- 🎥 **Video export:** `prezzer render` films the deck frame by frame on a virtual clock into an MP4, transitions, widgets, and embedded clips included, identical on every run
 - 💫 **Eight slide transitions:** `portal`, `glitch`, `zoom`, `rise`, `spiral`, `morph`, `split`, and `slide`, chosen per slide
 - 📝 **Markdown decks:** author text-heavy slides as one `.md` file. Beats derive from `<!-- beat -->` markers and the bake pre-renders everything at build time
 - 🔗 **Hash deep links:** `#4.2` reopens slide four mid-reveal, and refresh resumes exactly where you were
@@ -171,6 +172,18 @@ prezzer baking index.html
 
 The build compiles the deck with Bun's browser bundler and inlines every referenced `public/` asset, images and self-hosted fonts included, as data URIs. The file needs no server and keeps presenting when the network disappears: the starter's CDN display fonts fall back to system type offline, and [self-hosting them](docs/deck-authoring.md#fonts) bakes the full typography into the artifact for true airplane mode.
 
+## 🎥 Film It
+
+```bash
+bun add -d playwright-core
+bunx playwright-core install --only-shell chromium
+prezzer render --slides 2-6 --scale 2
+```
+
+`prezzer render` plays the deck in headless Chromium on a virtual clock and pipes every frame into ffmpeg, so the MP4 holds exactly what the browser draws: slide transitions, beat reveals, push widgets running to completion, and embedded `<video>` clips in sync. Timers, animations, and media all answer to the film clock, which makes two renders of the same deck identical and lets four capture workers split the work without drifting. `--scale 2` films 4K from the 1920x1080 stage, `--hold` sets seconds per beat, and a JSON timeline sets them per slide or per beat. Point it at a built `dist/index.html` to film a deck as it shipped, or at the source entry to bake first. The command needs `playwright-core` and ffmpeg; `prezzer dev` and `prezzer build` never load either.
+
+Prezzer components make a license-free graphics layer for any video too: build title cards, captions, and end cards as a deck, then render them. The full guide is [skills/prezzer/references/render.md](skills/prezzer/references/render.md).
+
 ## 🌌 Themes and Motion
 
 Prezzer ships the SilkCircuit design language by default: deep-space blacks, electric purple, neon cyan, and glow tokens tuned to survive washed-out projectors. Override only what your talk needs:
@@ -189,12 +202,12 @@ Components read the active theme with `useDeckTheme()`, and every token doubles 
 
 ## 🧩 Packages
 
-| Package                                     | What it does                                                                                                                  |
-| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| [`prezzer`](packages/engine)                | The React engine: deck shell, presenter chrome, theme tokens, motion primitives, widget registry, and the `prezzer build` CLI |
-| [`create-prezzer`](packages/create-prezzer) | Powers `bun create prezzer` and owns the starter deck                                                                         |
-| [`examples/hello`](examples/hello)          | The reference deck. Exercises the published package boundary and the complete build path                                      |
-| [`examples/demo`](examples/demo)            | The showcase deck. Prezzer presenting itself, deployed to [GitHub Pages](https://hyperb1iss.github.io/prezzer/) by CI         |
+| Package                                     | What it does                                                                                                                                 |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`prezzer`](packages/engine)                | The React engine: deck shell, presenter chrome, theme tokens, motion primitives, widget registry, and the `prezzer` CLI (dev, build, render) |
+| [`create-prezzer`](packages/create-prezzer) | Powers `bun create prezzer` and owns the starter deck                                                                                        |
+| [`examples/hello`](examples/hello)          | The reference deck. Exercises the published package boundary and the complete build path                                                     |
+| [`examples/demo`](examples/demo)            | The showcase deck. Prezzer presenting itself, deployed to [GitHub Pages](https://hyperb1iss.github.io/prezzer/) by CI                        |
 
 The built-in chrome is framework-free CSS. Decks can use Tailwind, vanilla CSS, CSS modules, or any other styling approach without changing the engine.
 

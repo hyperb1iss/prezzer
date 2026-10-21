@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
-import { mkdtemp, readdir, rm } from 'node:fs/promises'
+import { mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -137,10 +137,41 @@ describe.skipIf(!ready)('prezzer render', () => {
     }
   }, 120_000)
 
+  test('an interrupted render leaves the previous output and no partial file', async () => {
+    const timeline = resolveTimeline({ fps: 15, scale: 0.5, hold: 1, slides: '1' })
+    const out = join(scratch, 'interrupted.mp4')
+    await writeFile(out, 'the last good render')
+    const interrupt = new AbortController()
+    const render = renderDeck({
+      file: deck,
+      timeline,
+      out,
+      workers: 1,
+      signal: interrupt.signal,
+      // Interrupt once filming has written a few frames into the encoder.
+      onProgress: ({ phase, frame }) => {
+        if (phase === 'film' && frame === 5) interrupt.abort()
+      },
+    })
+    await expect(render).rejects.toThrow('interrupted')
+    expect(await readFile(out, 'utf8')).toBe('the last good render')
+    expect((await readdir(scratch)).filter((name) => name.includes('partial'))).toEqual([])
+  }, 120_000)
+
+  test('refuses a frame directory that already holds files', async () => {
+    const timeline = resolveTimeline({ fps: 15, scale: 0.5, hold: 1, slides: '1' })
+    const frames = join(scratch, 'stale')
+    await rm(frames, { recursive: true, force: true })
+    await Bun.write(join(frames, 'frame-000099.png'), 'stale')
+    await expect(renderDeck({ file: deck, timeline, frames, workers: 1 })).rejects.toThrow(
+      'not empty'
+    )
+  })
+
   test('writes an H.264 MP4 tagged bt709 in-stream', async () => {
     const timeline = resolveTimeline({ fps: 15, scale: 0.5, hold: 1, slides: '1' })
     const out = join(scratch, 'title.mp4')
-    const result = await renderDeck({ file: deck, timeline, out, workers: 2 })
+    const result = await renderDeck({ file: deck, timeline, out, workers: 1 })
     expect(result).toMatchObject({ frames: 15, width: 960, height: 540, output: out })
 
     const probe = spawnSync(

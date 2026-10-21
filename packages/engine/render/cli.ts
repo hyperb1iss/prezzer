@@ -167,6 +167,12 @@ export async function render(args: string[], { bake, fail }: CliHooks) {
     `${purple}prezzer${reset} ${muted}filming${reset} ${cyan}${display(built)}${reset} ${muted}at ${timeline.fps} fps · scale ${timeline.scale} · ${workers} worker${workers === 1 ? '' : 's'}${reset}`
   )
   const progress = progressLine()
+  // Ctrl+C or a kill stops the render cleanly: the partial output is
+  // removed and the previous file at --out survives.
+  const interrupt = new AbortController()
+  const onSignal = () => interrupt.abort()
+  process.once('SIGINT', onSignal)
+  process.once('SIGTERM', onSignal)
   try {
     const result = await renderDeck({
       file: built,
@@ -177,6 +183,7 @@ export async function render(args: string[], { bake, fail }: CliHooks) {
       workers,
       channel: flags.get('--channel'),
       onProgress: progress.update,
+      signal: interrupt.signal,
     })
     progress.done()
     const size = frames
@@ -188,6 +195,13 @@ export async function render(args: string[], { bake, fail }: CliHooks) {
     )
   } catch (error) {
     progress.done()
+    if (interrupt.signal.aborted) {
+      console.error(`${muted}${error instanceof Error ? error.message : String(error)}${reset}`)
+      process.exit(130)
+    }
     fail(error instanceof Error ? error.message : String(error))
+  } finally {
+    process.off('SIGINT', onSignal)
+    process.off('SIGTERM', onSignal)
   }
 }

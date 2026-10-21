@@ -1,5 +1,9 @@
-import { describe, expect, test } from 'bun:test'
-import { type FrameSink, orderedSink, videoArguments } from './encoder'
+import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
+import { spawnSync } from 'node:child_process'
+import { mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { type FrameSink, openVideoSink, orderedSink, partialPath, videoArguments } from './encoder'
 
 function memorySink() {
   const frames: number[] = []
@@ -8,7 +12,7 @@ function memorySink() {
       frames.push(frame[0] ?? -1)
     },
     async close() {},
-    abort() {},
+    async abort() {},
   }
   return { sink, frames }
 }
@@ -66,10 +70,80 @@ describe('orderedSink', () => {
         throw new Error('disk full')
       },
       async close() {},
-      abort() {},
+      async abort() {},
     }
     const ordered = orderedSink(failing, 4)
     await expect(ordered.put(0, frame(0))).rejects.toThrow('disk full')
     await expect(ordered.reserve(1)).rejects.toThrow('disk full')
+  })
+})
+
+const hasFfmpeg = spawnSync('ffmpeg', ['-version'], { stdio: 'ignore' }).status === 0
+
+describe.skipIf(!hasFfmpeg)('openVideoSink output safety', () => {
+  let scratch = ''
+  let png = new Uint8Array()
+
+  beforeAll(async () => {
+    scratch = await mkdtemp(join(tmpdir(), 'prezzer-encoder-test-'))
+    const still = spawnSync('ffmpeg', [
+      ...['-v', 'error', '-f', 'lavfi', '-i', 'color=c=0x80ffea:s=64x64'],
+      ...['-frames:v', '1', '-f', 'image2pipe', '-c:v', 'png', '-'],
+    ])
+    png = new Uint8Array(still.stdout)
+  })
+
+  afterAll(async () => {
+    if (scratch) await rm(scratch, { recursive: true, force: true })
+  })
+
+  const previous = 'the last good render'
+  const leftovers = async () => (await readdir(scratch)).filter((name) => name.includes('partial'))
+
+  test('encodes beside the output and replaces it only once ffmpeg finishes', async () => {
+    const out = join(scratch, 'talk.mp4')
+    await writeFile(out, previous)
+    const sink = openVideoSink({ out, fps: 15 })
+    for (let frame = 0; frame < 3; frame += 1) await sink.write(png)
+    // Mid-encode, the previous render is still the file at the output path.
+    expect(await readFile(out, 'utf8')).toBe(previous)
+    expect(partialPath(out)).toStartWith(join(scratch, '.talk.mp4.'))
+    await sink.close()
+    const encoded = await readFile(out)
+    expect(new TextDecoder().decode(encoded.subarray(4, 8))).toBe('ftyp')
+    expect(await leftovers()).toEqual([])
+  })
+
+  test('an aborted encode removes its partial file and keeps the previous output', async () => {
+    const out = join(scratch, 'aborted.mp4')
+    await writeFile(out, previous)
+    const sink = openVideoSink({ out, fps: 15 })
+    await sink.write(png)
+    await sink.abort()
+    expect(await readFile(out, 'utf8')).toBe(previous)
+    expect(await leftovers()).toEqual([])
+  })
+
+  test('a failed encode reports ffmpeg stderr and keeps the previous output', async () => {
+    const out = join(scratch, 'failed.mp4')
+    await writeFile(out, previous)
+    const sink = openVideoSink({ out, fps: 15 })
+    const garbage = new TextEncoder().encode('not a png frame')
+    // ffmpeg may die mid-stream or only at close; either way the error
+    // carries its own diagnostics.
+    const failure = await (async () => {
+      try {
+        for (let attempt = 0; attempt < 50; attempt += 1) await sink.write(garbage)
+        await sink.close()
+      } catch (error) {
+        return error
+      }
+      return null
+    })()
+    expect(failure).toBeInstanceOf(Error)
+    expect(String(failure)).toContain('ffmpeg exited')
+    await sink.abort()
+    expect(await readFile(out, 'utf8')).toBe(previous)
+    expect(await leftovers()).toEqual([])
   })
 })

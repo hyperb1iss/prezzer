@@ -1,4 +1,7 @@
+import { constants } from 'node:fs'
+import { access, readdir } from 'node:fs/promises'
 import { availableParallelism } from 'node:os'
+import { dirname } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import type { Browser, BrowserContext, Page } from 'playwright-core'
 import {
@@ -76,6 +79,8 @@ export interface RenderOptions {
   channel?: string | undefined
   seed?: number | undefined
   onProgress?: ((progress: RenderProgress) => void) | undefined
+  /** Stops the render; a partial MP4 or frame sequence is removed */
+  signal?: AbortSignal | undefined
 }
 
 export interface RenderResult {
@@ -101,7 +106,15 @@ async function loadChromium() {
 export async function launchBrowser(channel?: string): Promise<Browser> {
   const chromium = await loadChromium()
   try {
-    return await chromium.launch({ headless: true, ...(channel ? { channel } : {}) })
+    // The caller owns signals, so an interrupted render can clean up its
+    // partial output before the browser goes away.
+    return await chromium.launch({
+      headless: true,
+      handleSIGINT: false,
+      handleSIGTERM: false,
+      handleSIGHUP: false,
+      ...(channel ? { channel } : {}),
+    })
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     if (/Executable doesn't exist|install/i.test(message) && !channel) {
@@ -210,7 +223,11 @@ export async function planRender(
   url: string,
   shape: DeckShape,
   timeline: Timeline,
-  options: { seed?: number | undefined; onProgress?: RenderOptions['onProgress'] } = {}
+  options: {
+    seed?: number | undefined
+    onProgress?: RenderOptions['onProgress']
+    signal?: AbortSignal | undefined
+  } = {}
 ): Promise<RenderPlan> {
   const { first, last } = clampSlideRange(timeline.slides, shape.beats.length)
   const { fps } = timeline
@@ -226,6 +243,7 @@ export async function planRender(
     const shoot = async (count: number) => {
       const seen = { mutations: 0, quiet: 0 }
       for (let index = 0; index < count; index += 1) {
+        options.signal?.throwIfAborted()
         const step = await film.advance(frameStep(frames, fps), false)
         history.push(step.mutations)
         frames += 1
@@ -305,6 +323,7 @@ export async function shootPlan(
     workers: number
     seed?: number | undefined
     onProgress?: RenderOptions['onProgress']
+    signal?: AbortSignal | undefined
   }
 ) {
   const workers = Math.max(1, Math.min(options.workers, plan.frames))
@@ -337,6 +356,7 @@ export async function shootPlan(
           }
           const mine = frame % workers === worker
           if (mine) await ordered.reserve(frame)
+          options.signal?.throwIfAborted()
           await film.advance(frameStep(frame, timeline.fps), mine)
           if (!mine) continue
           await ordered.put(frame, await film.capture())
@@ -350,13 +370,41 @@ export async function shootPlan(
   }
 }
 
+/** Fails before any browser starts when the output cannot be written. */
+async function checkOutput(options: RenderOptions) {
+  if (options.frames) {
+    const existing = await readdir(options.frames).catch((error: NodeJS.ErrnoException) => {
+      if (error.code === 'ENOENT') return []
+      throw new RenderError(`cannot read ${options.frames}: ${error.message}`)
+    })
+    if (existing.length > 0) {
+      throw new RenderError(
+        `${options.frames} is not empty; frames go into a new or empty directory so no stale frame survives`
+      )
+    }
+    return options.frames
+  }
+  if (!options.out) throw new RenderError('set out (an MP4 path) or frames (a directory)')
+  const parent = dirname(options.out)
+  await access(parent, constants.W_OK).catch(() => {
+    throw new RenderError(`cannot write to ${parent}: it must exist and be writable`)
+  })
+  return options.out
+}
+
 /** Films a built deck into an MP4 (or a PNG sequence) on a virtual clock. */
 export async function renderDeck(options: RenderOptions): Promise<RenderResult> {
   const startedAt = performance.now()
-  const { timeline } = options
+  const { timeline, signal } = options
+  const output = await checkOutput(options)
   if (!options.frames) assertFfmpeg()
+  signal?.throwIfAborted()
   const url = pathToFileURL(options.file).href
   const browser = await launchBrowser(options.channel)
+  // Closing the browser unblocks whatever page call is in flight, so the
+  // render unwinds (and removes its partial output) promptly.
+  const stop = () => void browser.close().catch(() => undefined)
+  signal?.addEventListener('abort', stop, { once: true })
   try {
     const shape = await probeDeck(browser, url)
     const width = shape.width * timeline.scale
@@ -366,8 +414,6 @@ export async function renderDeck(options: RenderOptions): Promise<RenderResult> 
     }
     const plan = await planRender(browser, url, shape, timeline, options)
     if (plan.frames === 0) throw new RenderError('the timeline produced no frames')
-    const output = options.frames ?? options.out
-    if (!output) throw new RenderError('set out (an MP4 path) or frames (a directory)')
     const sink = options.frames
       ? await openFrameDirectory(options.frames)
       : openVideoSink({ out: output, fps: timeline.fps, crf: options.crf })
@@ -376,11 +422,13 @@ export async function renderDeck(options: RenderOptions): Promise<RenderResult> 
         workers: options.workers ?? defaultWorkers(),
         seed: options.seed,
         onProgress: options.onProgress,
+        signal,
       })
+      signal?.throwIfAborted()
       await sink.close()
     } catch (error) {
-      sink.abort()
-      throw error
+      await sink.abort()
+      throw signal?.aborted ? new RenderError('render interrupted; partial output removed') : error
     }
     return {
       frames: plan.frames,
@@ -390,7 +438,13 @@ export async function renderDeck(options: RenderOptions): Promise<RenderResult> 
       output,
       elapsedMs: performance.now() - startedAt,
     }
+  } catch (error) {
+    if (signal?.aborted && !(error instanceof RenderError)) {
+      throw new RenderError('render interrupted before any output was written')
+    }
+    throw error
   } finally {
-    await browser.close()
+    signal?.removeEventListener('abort', stop)
+    await browser.close().catch(() => undefined)
   }
 }

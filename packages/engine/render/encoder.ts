@@ -1,15 +1,15 @@
 import { type ChildProcess, spawn, spawnSync } from 'node:child_process'
 import { once } from 'node:events'
-import { mkdir, writeFile } from 'node:fs/promises'
-import { join } from 'node:path'
+import { mkdir, rename, rm, writeFile } from 'node:fs/promises'
+import { basename, dirname, extname, join } from 'node:path'
 
 /** Receives PNG frames in film order. */
 export interface FrameSink {
   write(frame: Uint8Array): Promise<void>
   /** Flush and finish the output */
   close(): Promise<void>
-  /** Stop without finishing; the output is incomplete */
-  abort(): void
+  /** Stop without finishing and remove anything partial */
+  abort(): Promise<void>
 }
 
 export interface VideoOptions {
@@ -81,9 +81,24 @@ export function videoArguments({ out, fps, crf = 18 }: VideoOptions): string[] {
   ]
 }
 
-/** Pipes frames straight into ffmpeg's stdin; no frame ever touches disk. */
+/**
+ * The sibling file an encode writes before it is complete. It keeps the
+ * output's extension so ffmpeg still picks the container from it, and it
+ * stays hidden until a finished encode renames it over the output.
+ */
+export function partialPath(out: string): string {
+  return join(dirname(out), `.${basename(out)}.${process.pid}.partial${extname(out)}`)
+}
+
+/**
+ * Pipes frames straight into ffmpeg's stdin; no frame ever touches disk.
+ * The encode writes a sibling partial file and renames it over `out` only
+ * once ffmpeg finishes cleanly, so a failed or interrupted render leaves
+ * the previous output untouched.
+ */
 export function openVideoSink(options: VideoOptions): FrameSink {
-  const child: ChildProcess = spawn('ffmpeg', videoArguments(options), {
+  const partial = partialPath(options.out)
+  const child: ChildProcess = spawn('ffmpeg', videoArguments({ ...options, out: partial }), {
     stdio: ['pipe', 'ignore', 'pipe'],
   })
   const stdin = child.stdin
@@ -93,52 +108,74 @@ export function openVideoSink(options: VideoOptions): FrameSink {
     stderr = `${stderr}${chunk}`.slice(-4000)
   })
   let failure: Error | null = null
-  const exited = new Promise<number | null>((resolve) => {
+  // close, not exit: close waits for stderr to drain, so errors arrive whole.
+  const closed = new Promise<number | null>((resolve) => {
     child.on('error', (error) => {
       failure = error
       resolve(null)
     })
-    child.on('exit', (code) => resolve(code))
+    child.on('close', (code) => resolve(code))
   })
   stdin.on('error', (error) => {
     failure ??= error
   })
-  const describe = (code: number | null) =>
-    new EncoderError(
+  let finished = false
+  const describe = async () => {
+    const code = await Promise.race([closed, new Promise<null>((r) => setTimeout(r, 2000, null))])
+    return new EncoderError(
       `ffmpeg exited with ${code ?? 'an error'}: ${stderr.trim() || failure?.message}`
     )
+  }
+  const discard = async () => {
+    finished = true
+    stdin.destroy()
+    if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL')
+    await closed
+    await rm(partial, { force: true })
+  }
 
   return {
     async write(frame) {
-      if (failure || child.exitCode !== null) throw describe(child.exitCode)
+      if (failure || child.exitCode !== null) throw await describe()
       if (!stdin.write(frame)) {
-        await Promise.race([once(stdin, 'drain'), exited])
-        if (failure || child.exitCode !== null) throw describe(child.exitCode)
+        await Promise.race([once(stdin, 'drain'), closed])
+        if (failure || child.exitCode !== null) throw await describe()
       }
     },
     async close() {
       stdin.end()
-      const code = await exited
-      if (code !== 0) throw describe(code)
+      const code = await closed
+      if (code !== 0) {
+        const error = await describe()
+        await discard()
+        throw error
+      }
+      finished = true
+      await rename(partial, options.out)
     },
-    abort() {
-      stdin.destroy()
-      child.kill('SIGKILL')
+    async abort() {
+      if (!finished) await discard()
     },
   }
 }
 
-/** Writes `frame-000000.png`, `frame-000001.png`, ... into a directory. */
+/**
+ * Writes `frame-000000.png`, `frame-000001.png`, ... into a directory. An
+ * aborted sequence removes the frames it wrote and nothing else.
+ */
 export async function openFrameDirectory(directory: string): Promise<FrameSink> {
   await mkdir(directory, { recursive: true })
-  let index = 0
+  const written: string[] = []
   return {
     async write(frame) {
-      await writeFile(join(directory, `frame-${String(index).padStart(6, '0')}.png`), frame)
-      index += 1
+      const path = join(directory, `frame-${String(written.length).padStart(6, '0')}.png`)
+      await writeFile(path, frame)
+      written.push(path)
     },
     async close() {},
-    abort() {},
+    async abort() {
+      await Promise.all(written.map((path) => rm(path, { force: true })))
+    },
   }
 }
 

@@ -73,6 +73,16 @@ describe.skipIf(!ready)('film runtime', () => {
       page.evaluate(() => Number(((window as unknown as Probe).fade as Animation).currentTime))
     await film.advance(400, false)
     expect(await time()).toBe(400)
+    // Natively paused, but running on film time, and it says so.
+    const state = () =>
+      page.evaluate(() => ((window as unknown as Probe).fade as Animation).playState)
+    expect(await state()).toBe('running')
+    await page.evaluate(() => ((window as unknown as Probe).fade as Animation).pause())
+    expect(await state()).toBe('paused')
+    await film.advance(100, false)
+    expect(await time()).toBe(400)
+    await page.evaluate(() => ((window as unknown as Probe).fade as Animation).play())
+    expect(await state()).toBe('running')
 
     await page.evaluate(() => ((window as unknown as Probe).fade as Animation).reverse())
     // Real time passing between frames must not move the animation.

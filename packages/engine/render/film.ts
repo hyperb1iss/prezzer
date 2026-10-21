@@ -264,6 +264,17 @@ function filmRuntime({ seed, epoch }: { seed: number; epoch: number }) {
       setCurrent(this, value as number)
     },
   })
+  // An adopted animation is natively paused but advancing on film time, so
+  // it reports what a page would see without the film clock.
+  const playState = describe('playState')
+  Object.defineProperty(proto, 'playState', {
+    configurable: true,
+    get(this: Animation) {
+      const entry = tracks.get(this)
+      if (!entry || entry.done) return playState?.get?.call(this)
+      return entry.held === null ? 'running' : 'paused'
+    },
+  })
   // Motion syncs WAAPI start times to its frameloop clock, which is the fake
   // clock and not the document timeline. Tracked animations ignore it.
   Object.defineProperty(proto, 'startTime', {

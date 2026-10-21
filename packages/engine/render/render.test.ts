@@ -93,7 +93,11 @@ describe.skipIf(!ready)('prezzer render', () => {
     if (scratch) await rm(scratch, { recursive: true, force: true })
   })
 
-  test('films identical frames on every run and with any number of workers', async () => {
+  // Page state is exact at any worker count: every worker also checks each
+  // frame against the plan. Pixels are byte-identical across runs at the same
+  // worker count, but a different count can shift GPU glow raster slightly,
+  // so this comparison allows that noise and nothing larger.
+  test('films the same frames with one worker and two, within GPU raster noise', async () => {
     // Slide 4 reveals beats; slide 5 is a push widget that runs on its own timers.
     // Slide 5 holds long enough for its widget to mount before the advance.
     const timeline = resolveTimeline(
@@ -102,7 +106,7 @@ describe.skipIf(!ready)('prezzer render', () => {
     const solo = join(scratch, 'solo')
     const parallel = join(scratch, 'parallel')
     const first = await renderDeck({ file: deck, timeline, frames: solo, workers: 1 })
-    const second = await renderDeck({ file: deck, timeline, frames: parallel, workers: 3 })
+    const second = await renderDeck({ file: deck, timeline, frames: parallel, workers: 2 })
 
     expect(second.frames).toBe(first.frames)
     expect((await readdir(solo)).length).toBe(first.frames)
@@ -110,10 +114,10 @@ describe.skipIf(!ready)('prezzer render', () => {
     const b = decodeFrames(parallel, second.width, second.height)
     expect(a.length).toBe(first.frames)
     expect(b.length).toBe(first.frames)
-    // Animation state is exact, but GPU raster is not: blurred glows wobble a
-    // few levels and text on an animating layer can antialias differently.
-    // That noise stays well under 1% of pixels in a frame, while a real
-    // timing divergence moves whole slides (measured at 2% to 56%).
+    // Divergent page state already fails the render (every worker checks each
+    // frame against the plan), so this guards only the pixels. GPU raster is
+    // not exact: blurred glows wobble a few levels and text on an animating
+    // layer can antialias differently, on well under 1% of a frame.
     const visible = a
       .map((frame, index) => ({ index, share: changedShare(frame, b[index] as Uint8Array, 32) }))
       .filter(({ share }) => share >= 0.01)

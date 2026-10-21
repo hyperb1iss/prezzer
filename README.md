@@ -60,7 +60,7 @@ A Prezzer deck is real software. It lives in its own repository, renders with re
 - 🎭 **Presenter chrome built in:** speaker notes, grid overview, shortcut help, act-aware progress rail, and honest rollout badges
 - 🖥️ **Presenter view:** press `p` for a second window with notes, next-slide preview, and a timer. The one HTML file plays both roles, even from `file://`
 - 🖨️ **PDF without dependencies:** open the artifact with `?print` and the browser's print dialog exports every slide as a fully revealed 16:9 page
-- 🎥 **Video export:** `prezzer render` films the deck frame by frame on a virtual clock into an MP4, transitions, widgets, and embedded clips included, identical on every run
+- 🎥 **Video export:** `prezzer render` films the deck frame by frame on a virtual clock into an MP4, transitions, widgets, and embedded clips included, repeatable down to GPU raster noise
 - 💫 **Eight slide transitions:** `portal`, `glitch`, `zoom`, `rise`, `spiral`, `morph`, `split`, and `slide`, chosen per slide
 - 📝 **Markdown decks:** author text-heavy slides as one `.md` file. Beats derive from `<!-- beat -->` markers and the bake pre-renders everything at build time
 - 🔗 **Hash deep links:** `#4.2` reopens slide four mid-reveal, and refresh resumes exactly where you were
@@ -180,7 +180,7 @@ bunx playwright-core install --only-shell chromium
 prezzer render --slides 2-6 --scale 2
 ```
 
-`prezzer render` plays the deck in headless Chromium on a virtual clock and pipes every frame into ffmpeg, so the MP4 holds exactly what the browser draws: slide transitions, beat reveals, push widgets running to completion, and embedded `<video>` clips in sync. Timers, animations, and media all answer to the film clock, which makes two renders of the same deck identical and lets four capture workers split the work without drifting. `--scale 2` films 4K from the 1920x1080 stage, `--hold` sets seconds per beat, and a JSON timeline sets them per slide or per beat. Point it at a built `dist/index.html` to film a deck as it shipped, or at the source entry to bake first. The command needs `playwright-core` and ffmpeg; `prezzer dev` and `prezzer build` never load either.
+`prezzer render` plays the deck in headless Chromium on a virtual clock and pipes every frame into ffmpeg, so the MP4 holds exactly what the browser draws: slide transitions, beat reveals, push widgets running to completion, and embedded `<video>` clips in sync. Timers, animations, and media all answer to the film clock, so every rerun and every parallel capture worker sees the same page state frame for frame; the pixels match too, apart from occasional GPU raster noise on glows. `--scale 2` films 4K from the 1920x1080 stage, `--hold` sets seconds per beat, and a JSON timeline sets them per slide or per beat. Point it at a built `dist/index.html` to film a deck as it shipped, or at the source entry to bake first. The command needs `playwright-core` and ffmpeg; `prezzer dev` and `prezzer build` never load either.
 
 Prezzer components make a license-free graphics layer for any video too: build title cards, captions, and end cards as a deck, then render them. The full guide is [skills/prezzer/references/render.md](skills/prezzer/references/render.md).
 

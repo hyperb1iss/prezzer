@@ -53,6 +53,12 @@ export interface Press {
 export interface RenderPlan {
   frames: number
   presses: Press[]
+  /**
+   * What the planning page observed on every frame. Capture workers must
+   * observe the same, which catches a worker whose page drifted from the
+   * plan even while its hash still matches.
+   */
+  observed: Array<{ mutations: number; running: number }>
   shape: DeckShape
   first: number
   last: number
@@ -239,6 +245,7 @@ export async function planRender(
   try {
     const presses: Press[] = []
     const history: number[] = []
+    const observed: RenderPlan['observed'] = []
     let frames = 0
     const shoot = async (count: number) => {
       const seen = { mutations: 0, quiet: 0 }
@@ -246,6 +253,7 @@ export async function planRender(
         options.signal?.throwIfAborted()
         const step = await film.advance(frameStep(frames, fps), false)
         history.push(step.mutations)
+        observed[frames] = { mutations: step.mutations, running: step.running }
         frames += 1
         seen.mutations += step.mutations
         seen.quiet = step.mutations === 0 && step.running === 0 ? seen.quiet + 1 : 0
@@ -306,7 +314,8 @@ export async function planRender(
       }
       await shoot(framesFor(holdFor(timeline, position.slide, position.beat), fps))
     }
-    return { frames, presses, shape, first, last }
+    observed.length = frames
+    return { frames, presses, observed, shape, first, last }
   } finally {
     await context.close()
   }
@@ -357,7 +366,13 @@ export async function shootPlan(
           const mine = frame % workers === worker
           if (mine) await ordered.reserve(frame)
           options.signal?.throwIfAborted()
-          await film.advance(frameStep(frame, timeline.fps), mine)
+          const step = await film.advance(frameStep(frame, timeline.fps), mine)
+          const planned = plan.observed[frame]
+          if (step.mutations !== planned?.mutations || step.running !== planned.running) {
+            throw new RenderError(
+              `capture worker diverged from the plan at frame ${frame}: planned ${planned?.mutations} mutations and ${planned?.running} running animations, saw ${step.mutations} and ${step.running}`
+            )
+          }
           if (!mine) continue
           await ordered.put(frame, await film.capture())
           done += 1

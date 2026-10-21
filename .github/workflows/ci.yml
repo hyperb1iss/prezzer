@@ -17,3 +17,33 @@ jobs:
     uses: hyperb1iss/shared-workflows/.github/workflows/bun-ci.yml@e37ea32677f7135df04380afe5366063d416212a
     with:
       bun-version: "1.4.0"
+
+  # The shared workflow runs the full gate, but its runner has neither a
+  # browser nor ffmpeg, so the render tests skip there. This job installs
+  # both and runs them, so film-runtime regressions fail CI.
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.0"
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install --yes --no-install-recommends ffmpeg
+
+      - name: Install the Chromium headless shell
+        working-directory: packages/engine
+        run: bunx playwright-core install --with-deps --only-shell chromium
+
+      - name: Build packages
+        run: bun run build:packages
+
+      - name: Render tests
+        env:
+          PREZZER_RENDER_TESTS: required
+        run: bun test packages/engine/render

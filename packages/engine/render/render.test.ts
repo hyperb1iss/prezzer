@@ -29,6 +29,12 @@ const hasFfmpeg = spawnSync('ffmpeg', ['-version'], { stdio: 'ignore' }).status 
 const enginesBuilt = existsSync(join(engineRoot, 'dist/index.js'))
 const ready = hasFfmpeg && enginesBuilt && (await canLaunch())
 if (!ready) {
+  // CI's render job sets this so a broken install fails instead of skipping.
+  if (process.env.PREZZER_RENDER_TESTS === 'required') {
+    throw new Error(
+      'render tests are required here but Chromium, ffmpeg, or built packages are missing'
+    )
+  }
   console.warn('skipping render tests: they need Chromium, ffmpeg, and built packages')
 }
 

@@ -15,6 +15,9 @@ async function canLaunch() {
   }
 }
 const ready = await canLaunch()
+if (!ready && process.env.PREZZER_RENDER_TESTS === 'required') {
+  throw new Error('film tests are required here but Chromium will not launch')
+}
 
 const epoch = new Date('2030-01-02T03:04:05Z')
 type Probe = Window & Record<string, unknown>

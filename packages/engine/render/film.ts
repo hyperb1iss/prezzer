@@ -56,7 +56,8 @@ interface FilmRuntime {
  * Playwright serializes it by source.
  */
 function filmRuntime({ seed, epoch }: { seed: number; epoch: number }) {
-  type Track = { start: number; rate: number; held: number | null; done: boolean }
+  // Local time is base + (film time - start) * rate, unless held (paused).
+  type Track = { base: number; start: number; rate: number; held: number | null; done: boolean }
   type MediaTrack = { playing: boolean; anchorFilm: number; anchorMedia: number; ended: boolean }
   type Timer = {
     id: number
@@ -161,9 +162,8 @@ function filmRuntime({ seed, epoch }: { seed: number; epoch: number }) {
   const NativeDate = Date
   function FilmDate(this: unknown, ...args: unknown[]) {
     if (!new.target) return new NativeDate(epoch + clock).toString()
-    return args.length === 0
-      ? new NativeDate(epoch + clock)
-      : new (NativeDate as unknown as new (...values: unknown[]) => Date)(...args)
+    // Reflect.construct keeps new.target, so subclasses of Date keep theirs.
+    return Reflect.construct(NativeDate, args.length === 0 ? [epoch + clock] : args, new.target)
   }
   FilmDate.prototype = NativeDate.prototype
   FilmDate.now = () => epoch + clock
@@ -191,14 +191,21 @@ function filmRuntime({ seed, epoch }: { seed: number; epoch: number }) {
   const nativeCancel = proto.cancel
   const setCurrent = (animation: Animation, value: number) =>
     currentTime?.set?.call(animation, value)
-  const local = (track: Track, at: number) => track.held ?? (at - track.start) * track.rate
+  const local = (track: Track, at: number) =>
+    track.held ?? track.base + (at - track.start) * track.rate
+  // Moves the anchor to now so a rate change only affects time from here on.
+  const retime = (track: Track, at: number, rate: number, time = local(track, at)) => {
+    track.base = time
+    track.start = at
+    track.rate = rate
+  }
   const endOf = (animation: Animation) => {
     const end = animation.effect?.getComputedTiming().endTime
     return typeof end === 'number' ? end : Number(end ?? 0)
   }
 
   const track = (animation: Animation, start: number) => {
-    const entry: Track = { start, rate: animation.playbackRate, held: null, done: false }
+    const entry: Track = { base: 0, start, rate: animation.playbackRate, held: null, done: false }
     tracks.set(animation, entry)
     nativePause.call(animation)
     return entry
@@ -225,7 +232,7 @@ function filmRuntime({ seed, epoch }: { seed: number; epoch: number }) {
       nativePause.call(this)
     }
     entry.held = null
-    entry.start = at - time / entry.rate
+    retime(entry, at, entry.rate, time)
     setCurrent(this, time)
   }
   proto.pause = function (this: Animation) {
@@ -251,7 +258,7 @@ function filmRuntime({ seed, epoch }: { seed: number; epoch: number }) {
       const entry = tracks.get(this)
       if (entry && typeof value === 'number') {
         if (entry.held !== null) entry.held = value
-        else entry.start = now() - value / entry.rate
+        else retime(entry, now(), entry.rate, value)
         entry.done = false
       }
       setCurrent(this, value as number)
@@ -268,23 +275,43 @@ function filmRuntime({ seed, epoch }: { seed: number; epoch: number }) {
       if (!tracks.has(this)) startTime?.set?.call(this, value)
     },
   })
+  // Rate changes re-anchor on film time; the native animation stays paused
+  // with its rate mirrored so a native finish() lands on the right end.
+  const setRate = (animation: Animation, value: number) => {
+    const entry = tracks.get(animation)
+    if (entry) retime(entry, now(), value)
+    playbackRate?.set?.call(animation, value)
+    if (entry && !entry.done) nativePause.call(animation)
+  }
   Object.defineProperty(proto, 'playbackRate', {
     configurable: true,
     get(this: Animation) {
       return playbackRate?.get?.call(this)
     },
     set(this: Animation, value: number) {
-      const entry = tracks.get(this)
-      if (entry && value !== 0) {
-        const at = now()
-        const time = local(entry, at)
-        entry.rate = value
-        if (entry.held === null) entry.start = at - time / value
-      }
-      playbackRate?.set?.call(this, value)
-      if (entry && !entry.done) nativePause.call(this)
+      setRate(this, value)
     },
   })
+  const nativeUpdateRate = proto.updatePlaybackRate
+  proto.updatePlaybackRate = function (this: Animation, value: number) {
+    if (!tracks.has(this)) return nativeUpdateRate.call(this, value)
+    setRate(this, value)
+  }
+  const nativeReverse = proto.reverse
+  proto.reverse = function (this: Animation) {
+    const entry = tracks.get(this)
+    if (!entry) return nativeReverse.call(this)
+    // Reversing plays from the current point (or the end, once finished)
+    // back toward the start, on film time.
+    const at = now()
+    const time = Math.min(Math.max(local(entry, at), 0), endOf(this))
+    entry.held = null
+    entry.done = false
+    retime(entry, at, -entry.rate, time)
+    playbackRate?.set?.call(this, entry.rate)
+    nativePause.call(this)
+    setCurrent(this, time)
+  }
 
   const media = new Map<HTMLMediaElement, MediaTrack>()
   const mediaProto = HTMLMediaElement.prototype
@@ -353,6 +380,22 @@ function filmRuntime({ seed, epoch }: { seed: number; epoch: number }) {
     get(this: HTMLMediaElement) {
       const entry = media.get(this)
       return entry ? entry.ended : mediaEnded?.get?.call(this)
+    },
+  })
+  // A rate change only affects time from now on, like native playback.
+  const mediaRate = Object.getOwnPropertyDescriptor(mediaProto, 'playbackRate')
+  Object.defineProperty(mediaProto, 'playbackRate', {
+    configurable: true,
+    get(this: HTMLMediaElement) {
+      return mediaRate?.get?.call(this)
+    },
+    set(this: HTMLMediaElement, value: number) {
+      const entry = media.get(this)
+      if (entry?.playing) {
+        entry.anchorMedia = mediaPosition(this, entry, now())
+        entry.anchorFilm = now()
+      }
+      mediaRate?.set?.call(this, value)
     },
   })
   Object.defineProperty(mediaProto, 'currentTime', {
@@ -601,6 +644,10 @@ function filmRuntime({ seed, epoch }: { seed: number; epoch: number }) {
       } catch (error) {
         report(error)
       }
+      // The callback's microtasks belong to its task, so timers they set
+      // (an awaited zero-delay sleep) inherit its nesting level. Every
+      // microtask has run once a macrotask comes around.
+      await macrotask()
       nesting = 0
       await drain()
       adopt()

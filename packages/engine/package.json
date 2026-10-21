@@ -44,13 +44,16 @@
       "default": "./dist/markdown/index.js"
     },
     "./styles.css": "./dist/styles.css",
-    "./bun-plugin": "./bun-plugin.ts"
+    "./bun-plugin": "./bun-plugin.ts",
+    "./render": "./render/index.ts"
   },
   "files": [
     "dist",
     "bin",
     "bun-plugin.ts",
     "markdown-loader.ts",
+    "render",
+    "!render/*.test.ts",
     "README.md",
     "LICENSE"
   ],

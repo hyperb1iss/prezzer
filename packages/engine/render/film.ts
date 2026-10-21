@@ -363,12 +363,17 @@ function filmRuntime({ seed, epoch }: { seed: number; epoch: number }) {
     },
     set(this: HTMLMediaElement, value: number) {
       const entry = media.get(this)
-      if (entry) {
-        entry.anchorMedia = value
-        entry.anchorFilm = now()
-        entry.ended = false
+      if (!entry) {
+        mediaTime?.set?.call(this, value)
+        return
       }
-      mediaTime?.set?.call(this, value)
+      // The next captured frame seeks the picture; the page hears the seek now.
+      entry.anchorMedia = value
+      entry.anchorFilm = now()
+      entry.ended = false
+      fire(this, 'seeking')
+      fire(this, 'timeupdate')
+      fire(this, 'seeked')
     },
   })
 
@@ -383,23 +388,35 @@ function filmRuntime({ seed, epoch }: { seed: number; epoch: number }) {
       for (const type of events) element.addEventListener(type, done, { once: true })
     })
 
-  // Seeks the renderer makes for pictures must stay invisible to the page:
-  // workers capture different frames and so seek at different times, and a
-  // stray seeking or timeupdate event would let their pages drift apart.
+  // A filmed element only ever moves by renderer seeks, so every native
+  // event it fires (seeking, seeked, timeupdate, ended, and the rest) is an
+  // artifact of which frames this page captures. Those stay invisible: pages
+  // that capture different frames would otherwise drift apart. The page
+  // hears the film clock's own synthetic events instead.
   const seeks = new WeakMap<HTMLMediaElement, () => void>()
-  for (const type of ['seeking', 'seeked', 'timeupdate', 'error']) {
+  const nativeOnly = [
+    'seeking',
+    'seeked',
+    'timeupdate',
+    'ended',
+    'play',
+    'playing',
+    'pause',
+    'waiting',
+    'canplay',
+    'canplaythrough',
+  ]
+  for (const type of [...nativeOnly, 'error']) {
     window.addEventListener(
       type,
       (event) => {
         const target = event.target
-        if (!(target instanceof HTMLMediaElement)) return
-        const done = seeks.get(target)
-        if (!done) return
+        if (!(target instanceof HTMLMediaElement) || !event.isTrusted) return
         if (type === 'seeked' || type === 'error') {
+          seeks.get(target)?.()
           seeks.delete(target)
-          done()
         }
-        if (type !== 'error') event.stopImmediatePropagation()
+        if (type !== 'error' && media.has(target)) event.stopImmediatePropagation()
       },
       true
     )
@@ -450,8 +467,8 @@ function filmRuntime({ seed, epoch }: { seed: number; epoch: number }) {
     if (!captured) return
     await waitForPicture(element)
     // A hair past the frame boundary so float error never lands on the
-    // previous decoded frame.
-    target = Math.max(0, target + 0.0005)
+    // previous decoded frame, but never past the end.
+    target = Math.max(0, Math.min(target + 0.0005, duration || Number.POSITIVE_INFINITY))
     if (Math.abs(getMediaTime(element) - target) < 0.0001) return
     await seek(element, target)
   }

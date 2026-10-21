@@ -75,15 +75,20 @@
         "@types/react": "catalog:",
         "@types/react-dom": "catalog:",
         "motion": "catalog:",
+        "playwright-core": "catalog:",
         "react": "catalog:",
         "react-dom": "catalog:",
         "typescript": "catalog:",
       },
       "peerDependencies": {
         "motion": ">=12.0.0",
+        "playwright-core": ">=1.50.0",
         "react": ">=19.0.0",
         "react-dom": ">=19.0.0",
       },
+      "optionalPeers": [
+        "playwright-core",
+      ],
     },
   },
   "catalog": {
@@ -92,6 +97,7 @@
     "@types/react-dom": "^19.2.5",
     "bun-plugin-tailwind": "^0.1.2",
     "motion": "^13.1.1",
+    "playwright-core": "^1.64.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "tailwindcss": "^4.3.3",
@@ -257,6 +263,8 @@
     "motion-utils": ["motion-utils@13.0.0", "", {}, "sha512-7DnN7TmbLcYXcG4RVadXIihWlyuM9afoUww8Y5Agg431kGKiuL2/OMyP4mJ5wLz+pvN3t5ySClLOaVXJ+wekRQ=="],
 
     "picocolors": ["picocolors@1.1.1", "", {}, "sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA=="],
+
+    "playwright-core": ["playwright-core@1.64.1", "", { "bin": { "playwright-core": "cli.js" } }, "sha512-BC4s8y6SEVA6Q1rSxZTto8hI1KUI3xXlHGZgvGqP4IqPdI/a6FX9H29IDNz7vKo9l21b6LfYosScPL6M3xxyDQ=="],
 
     "prettier": ["prettier@3.9.6", "", { "bin": { "prettier": "bin/prettier.cjs" } }, "sha512-OpN0zzVdiaiAhxpuuj5efpIS4sY9j7bY6uR5mnj5yPzGkdkjNKSJeUThPb60Jw29QuAZgA4o+/iB49kFiaBX6g=="],
 

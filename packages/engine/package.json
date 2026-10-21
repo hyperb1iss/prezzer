@@ -65,7 +65,13 @@
   "peerDependencies": {
     "motion": ">=12.0.0",
     "react": ">=19.0.0",
-    "react-dom": ">=19.0.0"
+    "react-dom": ">=19.0.0",
+    "playwright-core": ">=1.50.0"
+  },
+  "peerDependenciesMeta": {
+    "playwright-core": {
+      "optional": true
+    }
   },
   "dependencies": {
     "bun-plugin-tailwind": "^0.1.2"
@@ -74,6 +80,7 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "motion": "catalog:",
+    "playwright-core": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "typescript": "catalog:"

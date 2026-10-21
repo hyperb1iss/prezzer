@@ -41,6 +41,7 @@ export function App() {
 - `prezzer/markdown` turns pre-rendered markdown slide data into `SlideDef[]`; the bun plugin emits calls to it for `.md` imports.
 - `prezzer/styles.css` contains the framework-free shell and chrome styles.
 - `prezzer/bun-plugin` keeps linked decks on one React and Motion instance and resolves root-absolute `public/` references for both the dev server and the bake.
+- `prezzer/render` films pages deterministically in headless Chromium: `renderDeck` for a whole deck, `prepareFilm` and `startFilm` for any page, and an ffmpeg frame sink. It needs the optional `playwright-core` peer.
 
 ## CLI
 
@@ -48,8 +49,9 @@ export function App() {
 prezzer dev
 prezzer build
 prezzer build talk.html --outdir release
+prezzer render --slides 2-6 --hold 2
 ```
 
-`prezzer dev` serves the deck with hot reload and rooted `public/` paths (ETag/304 and Range handling built in), on `127.0.0.1:1609` by default and bound to localhost unless `--host` says otherwise; when 1609 is busy it walks to the next free port. `prezzer build` uses Bun's browser compiler and Tailwind plugin to emit one self-contained HTML file that inlines literally referenced `public/` assets (and warns about the rest); pass `--no-minify` while diagnosing output. `prezzer --version` (or `-v`) prints the engine version.
+`prezzer dev` serves the deck with hot reload and rooted `public/` paths (ETag/304 and Range handling built in), on `127.0.0.1:1609` by default and bound to localhost unless `--host` says otherwise; when 1609 is busy it walks to the next free port. `prezzer build` uses Bun's browser compiler and Tailwind plugin to emit one self-contained HTML file that inlines literally referenced `public/` assets (and warns about the rest); pass `--no-minify` while diagnosing output. `prezzer render` films the deck on a virtual clock into an H.264 MP4 (or `--frames` PNGs): it bakes a source entry first or films a built `.html` as-is, and takes `--fps`, `--scale`, `--hold`, `--slides`, `--timeline`, `--crf`, `--workers`, and `--channel`. It needs `playwright-core` (`bunx playwright-core install --only-shell chromium` for the browser) and ffmpeg on `PATH`. `prezzer --version` (or `-v`) prints the engine version.
 
 Full authoring guidance lives in the [repository documentation](https://github.com/hyperb1iss/prezzer/blob/main/docs/deck-authoring.md).

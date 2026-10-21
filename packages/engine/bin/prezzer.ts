@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
 
-import tailwind from 'bun-plugin-tailwind'
 import { lstat, mkdir, mkdtemp, readdir, realpath, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { basename, dirname, isAbsolute, relative, resolve, sep } from 'node:path'
+import tailwind from 'bun-plugin-tailwind'
 import prezzerPlugin, { bundlerResolvedAssets } from '../bun-plugin'
 import { version } from '../package.json'
 
@@ -26,6 +26,7 @@ ${cyan}Usage${reset}
 ${cyan}Commands${reset}
   dev      serve the deck with hot reload and public/ assets
   build    bake one self-contained HTML file
+  render   film the deck into an MP4 on a virtual clock
 
 ${cyan}Options${reset}
   dev
@@ -34,12 +35,24 @@ ${cyan}Options${reset}
   build
     --outdir <dir>   output directory ${muted}(default: dist)${reset}
     --no-minify      keep readable output while diagnosing builds
+  render [deck]      a source entry is baked first; a built .html renders as-is
+    --out <file>     MP4 path ${muted}(default: beside the built deck)${reset}
+    --frames <dir>   write a PNG sequence instead of an MP4
+    --fps <n>        frames per second ${muted}(default: 30)${reset}
+    --scale <n>      device scale; 2 films 4K from a 1920x1080 stage ${muted}(default: 1)${reset}
+    --hold <s>       seconds on each beat ${muted}(default: 3)${reset}
+    --slides <range> 3, 2-5, or 4- ${muted}(default: the whole deck)${reset}
+    --timeline <f>   JSON with per-slide and per-beat holds
+    --crf <n>        H.264 quality, lower is better ${muted}(default: 18)${reset}
+    --workers <n>    parallel capture pages ${muted}(default: a quarter of the cores, up to 4)${reset}
+    --channel <name> browser channel such as chrome ${muted}(default: Playwright's Chromium)${reset}
   -v, --version      print the engine version
 
 ${cyan}Examples${reset}
   prezzer dev
   prezzer build
-  prezzer build talk.html --outdir release`)
+  prezzer build talk.html --outdir release
+  prezzer render --slides 2-4 --scale 2`)
 }
 
 function formatSize(bytes: number): string {
@@ -262,6 +275,19 @@ async function build(args: string[]) {
     }
   }
 
+  if (!(await bake({ entry, outdir, minify }))) process.exitCode = 1
+}
+
+/** Bakes `entry` into one HTML file; resolves to its path, or null after printing the failure. */
+async function bake({
+  entry,
+  outdir,
+  minify,
+}: {
+  entry: string
+  outdir: string
+  minify: boolean
+}): Promise<string | null> {
   const projectRoot = await realpath('.')
   const entryPath = resolve(entry)
   const outputDirectory = resolve(outdir)
@@ -304,16 +330,14 @@ async function build(args: string[]) {
 
     if (!result.success) {
       for (const log of result.logs) console.error(log)
-      process.exitCode = 1
-      return
+      return null
     }
 
     const stagedOutputPath = resolve(stagingDirectory, basename(entryPath))
     const standalone = result.outputs.find((output) => output.path === stagedOutputPath)
     if (!standalone) {
       console.error(`${red}error${reset} Bun did not emit the standalone deck`)
-      process.exitCode = 1
-      return
+      return null
     }
 
     const { html, unreferenced } = await inlinePublicAssets(await standalone.text())
@@ -339,6 +363,7 @@ async function build(args: string[]) {
     console.log(
       `${green}✓${reset} ${cyan}${displayPath}${reset} ${muted}·${reset} ${coral}${formatSize(bytes)}${reset} ${muted}·${reset} ${coral}${elapsed}${reset} ${muted}· ${tagline}${reset}`
     )
+    return outputPath
   } finally {
     await rm(stagingDirectory, { recursive: true, force: true })
   }
@@ -354,6 +379,10 @@ if (!command || command === 'help' || command === '--help' || command === '-h') 
   await dev(args)
 } else if (command === 'build') {
   await build(args)
+} else if (command === 'render') {
+  // Loaded on demand: render pulls in Playwright, which dev and build never need.
+  const { render } = await import('../render/cli')
+  await render(args, { bake, fail })
 } else {
   fail(`unknown command: ${command}`)
 }

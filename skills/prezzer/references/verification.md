@@ -17,6 +17,8 @@ Run the narrow gate while editing; run both before handing off.
 
 `prezzer build [entry] [--outdir <dir>] [--no-minify]` defaults to `index.html` and `dist`. `--outdir` must be inside the project and can't contain the entry. Use `--no-minify` when diagnosing what landed in the artifact. `prezzer --version` (or `-v`) prints the engine version.
 
+`prezzer render [deck]` films the deck into an MP4 on a virtual clock; it needs `playwright-core` and ffmpeg, and [render.md](render.md) covers setup and timing. A short render (`prezzer render --slides 2-3 --hold 1`) doubles as a reviewable recording of transitions and widgets.
+
 ## The built-file pass
 
 Open `dist/index.html` from `file://` and drive:

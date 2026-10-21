@@ -73,6 +73,8 @@ Two details that decide whether it works:
 
 Widgets unregister automatically on unmount; slide changes reset the queue naturally because the components unmount with the slide.
 
+`prezzer render` films push widgets without help: when an advance leaves the position unchanged, it lets the widget run until the slide goes quiet, then moves on. A widget with long silent pauses needs an explicit duration in the render timeline; see [render.md](render.md).
+
 ## Demo fallbacks
 
 Every push widget is a live demo, and live demos fail. Give each one a deny-mode variant (`useDenyMode()`) or a static final-state fallback, and rehearse the failure path. That's what deny mode is for.

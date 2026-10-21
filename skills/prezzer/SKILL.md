@@ -1,6 +1,6 @@
 ---
 name: prezzer
-description: Build, edit, verify, or present an interactive Prezzer deck, the Bun-native React presentation engine that compiles a talk into one offline HTML file. Use whenever the work involves a Prezzer deck or a repository scaffolded by `bun create prezzer`, and for any mention of slides, beats, speaker notes, presenter chrome, deck widgets, slide transitions, deck theming, deck outlines, or standalone HTML deck builds, even when prezzer is not named explicitly.
+description: Build, edit, verify, or present an interactive Prezzer deck, the Bun-native React presentation engine that compiles a talk into one offline HTML file. Use whenever the work involves a Prezzer deck or a repository scaffolded by `bun create prezzer`, and for any mention of slides, beats, speaker notes, presenter chrome, deck widgets, slide transitions, deck theming, deck outlines, standalone HTML deck builds, or exporting a deck to video, even when prezzer is not named explicitly.
 ---
 
 # Prezzer decks as software
@@ -19,6 +19,7 @@ This file carries the workflow and the map. The `references/` directory carries 
 | [references/authoring.md](references/authoring.md)       | Shaping the story: outline, acts, timing budget, compression path, speaker notes, the `facts.ts` pattern                |
 | [references/markdown.md](references/markdown.md)         | Authoring text-heavy slides as one `.md` file: grammar, derived beats, themed rendering, when to use JSX instead        |
 | [references/verification.md](references/verification.md) | Before handing off: the check/build gates, the dev-server asset gotcha and its verified fix, offline and browser passes |
+| [references/render.md](references/render.md)             | Exporting the deck as video: `prezzer render` setup, flags, timeline files, widgets and embedded clips, determinism     |
 
 ## Start from the supported path
 
